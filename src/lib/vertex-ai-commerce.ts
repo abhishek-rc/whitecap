@@ -9,7 +9,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 // Configuration
-const PROJECT_ID = process.env.GOOGLE_CLOUD_PROJECT_ID || 'gwa-vertex';
+const PROJECT_ID = process.env.GOOGLE_CLOUD_PROJECT_ID || 'whitecap-us';
 const LOCATION = process.env.VERTEX_AI_LOCATION || 'global';
 const CATALOG_ID = process.env.VERTEX_AI_CATALOG_ID || 'default_catalog';
 const BRANCH_ID = process.env.VERTEX_AI_BRANCH_ID || '0';

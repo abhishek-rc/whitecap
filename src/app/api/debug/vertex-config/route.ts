@@ -5,7 +5,7 @@ export async function GET() {
   try {
     // Get configuration details
     const config = {
-      projectId: process.env.GOOGLE_CLOUD_PROJECT_ID || 'gwa-vertex',
+      projectId: process.env.GOOGLE_CLOUD_PROJECT_ID || 'whitecap-us',
       location: process.env.VERTEX_AI_LOCATION || 'global',
       catalogId: process.env.VERTEX_AI_CATALOG_ID || 'default_catalog',
       branchId: process.env.VERTEX_AI_BRANCH_ID || '0',

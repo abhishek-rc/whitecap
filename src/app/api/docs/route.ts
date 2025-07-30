@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   const apiDocs = {
-    title: "Service Foods - Vertex AI Search API",
+    title: "Whitecap - Vertex AI Search API",
     version: "1.0.0",
     description: "API for searching and discovering foodservice products for the Australian hospitality industry",
     baseUrl: "http://localhost:3000/api",

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Service Foods API Testing Script
+ * Whitecap API Testing Script
  * Tests all API endpoints for the Vertex AI Search POC
  */
 
@@ -332,7 +332,7 @@ async function testApiDocumentation() {
 
 async function runAllTests() {
   log('\n' + '='.repeat(60), 'bold');
-  log('🚀 Service Foods API Test Suite', 'bold');
+  log('🚀 Whitecap API Test Suite', 'bold');
   log('Testing Vertex AI Search POC APIs', 'cyan');
   log('='.repeat(60), 'bold');
   

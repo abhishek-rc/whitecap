@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Upload Service Foods data to Vertex AI Search for Commerce
+ * Upload Whitecap data to Vertex AI Search for Commerce
  * This script processes the CSV files and uploads them to Google Cloud Retail API
  */
 
@@ -11,7 +11,7 @@ const csv = require('csv-parser');
 const { GoogleAuth } = require('google-auth-library');
 
 // Configuration
-const PROJECT_ID = process.env.GOOGLE_CLOUD_PROJECT_ID || 'gwa-vertex';
+const PROJECT_ID = process.env.GOOGLE_CLOUD_PROJECT_ID || 'whitecap-us';
 const LOCATION = process.env.VERTEX_AI_LOCATION || 'global';
 const CATALOG_ID = process.env.VERTEX_AI_CATALOG_ID || 'default_catalog';
 const BRANCH_ID = process.env.VERTEX_AI_BRANCH_ID || '0';
@@ -23,10 +23,10 @@ class VertexAIDataUploader {
   constructor() {
     this.auth = new GoogleAuth({
       scopes: ['https://www.googleapis.com/auth/cloud-platform'],
-      keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS || '../gwa-vertex-service-foods.json',
+      keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS || path.join(__dirname, '..', 'whitecap-us-vertex-key.json'),
     });
 
-    this.projectPath = `projects/gwa-vertex`;
+    this.projectPath = `projects/whitecap-us`;
     this.catalogPath = `${this.projectPath}/locations/global/catalogs/default_catalog`;
     this.branchPath = `${this.catalogPath}/branches/0`;
   }
@@ -39,6 +39,31 @@ class VertexAIDataUploader {
 
   getApiUrl(endpoint) {
     return `${RETAIL_API_BASE}/${API_VERSION}/${endpoint}`;
+  }
+
+  /**
+   * Generate realistic random stock quantity
+   */
+  generateRandomStock() {
+    // Generate different stock ranges based on product availability scenarios
+    const scenario = Math.random();
+    
+    if (scenario < 0.1) {
+      // 10% chance: Out of stock or very low stock (0-5)
+      return Math.floor(Math.random() * 6);
+    } else if (scenario < 0.3) {
+      // 20% chance: Low stock (6-25)
+      return Math.floor(Math.random() * 20) + 6;
+    } else if (scenario < 0.6) {
+      // 30% chance: Medium stock (26-100)
+      return Math.floor(Math.random() * 75) + 26;
+    } else if (scenario < 0.85) {
+      // 25% chance: Good stock (101-500)
+      return Math.floor(Math.random() * 400) + 101;
+    } else {
+      // 15% chance: High stock (501-2000)
+      return Math.floor(Math.random() * 1500) + 501;
+    }
   }
 
   async readCSV(filePath) {
@@ -63,7 +88,7 @@ class VertexAIDataUploader {
 
     // Force all products to be IN_STOCK with available quantity
     let availability = 'IN_STOCK';
-    const forceAvailableQuantity = totalStock > 0 ? totalStock : 100; // Use actual stock or default to 100
+    const forceAvailableQuantity = totalStock > 0 ? totalStock : this.generateRandomStock(); // Use actual stock or generate random stock
 
     // Build categories array
     const categories = [];
@@ -253,9 +278,6 @@ class VertexAIDataUploader {
         reconciliationMode: 'INCREMENTAL'
       };
 
-      console.log(`Importing ${products.length} products to Vertex AI Search for Commerce...`);
-      console.log(`Endpoint: ${url}`);
-
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -297,7 +319,7 @@ class VertexAIDataUploader {
 console.log(`Creating catalog at ${url}...`);
       const catalogRequest = {
         catalogId: CATALOG_ID,
-        displayName: 'Service Foods Product Catalog',
+        displayName: 'Whitecap Product Catalog',
         productLevelConfig: {
           ingestionProductType: 'PRIMARY',
           merchantCenterProductIdField: 'id'
@@ -415,40 +437,20 @@ console.log(`Creating catalog at ${url}...`);
       // Step 2: Setup serving configs
       // await this.setupServingConfigs();
 
-      // Step 3: Read CSV files
-      console.log('📖 Reading CSV files...');
-      const productDataPath = path.join(__dirname, '..', 'Productextract.csv');
-      const stockDataPath = path.join(__dirname, '..', 'Stockextract.csv');
+      // Step 3: Read processed JSON file
+      console.log('📖 Reading processed Whitecap data...');
+      const jsonDataPath = path.join(__dirname, '..', 'whitecap-vertex-ai-products.json');
 
-      if (!fs.existsSync(productDataPath)) {
-        throw new Error(`Product data file not found: ${productDataPath}`);
+      if (!fs.existsSync(jsonDataPath)) {
+        throw new Error(`Processed data file not found: ${jsonDataPath}. Please run 'node scripts/process-whitecap-data.js' first.`);
       }
 
-      if (!fs.existsSync(stockDataPath)) {
-        throw new Error(`Stock data file not found: ${stockDataPath}`);
-      }
+      console.log('📄 Loading JSON data...');
+      const jsonData = JSON.parse(fs.readFileSync(jsonDataPath, 'utf-8'));
+      const retailProducts = jsonData.products;
 
-      const [productData, stockData] = await Promise.all([
-        this.readCSV(productDataPath),
-        this.readCSV(stockDataPath)
-      ]);
-
-      console.log(`✅ Loaded ${productData.length} products and ${stockData.length} stock records`);
-
-      // Step 4: Transform data to Retail API format
-      console.log('🔄 Transforming data to Retail API format...');
-      const retailProducts = productData
-        .filter(product => {
-          const isActive = product.IsActive === 'true';
-          const isNotDeleted = product.IsDeleted === 'false';
-          const hasProductCode = (product.ProductCode && product.ProductCode.trim() !== '') || 
-                                (product.Product_Code__c && product.Product_Code__c.trim() !== '');
-          const productCode = product.ProductCode || product.Product_Code__c || 'NO_CODE';
-          return isActive && isNotDeleted && hasProductCode;
-        })
-        .map(product => this.transformToRetailProduct(product, stockData));
-
-      console.log(`✅ Transformed ${retailProducts.length} products`);
+      console.log(`✅ Loaded ${retailProducts.length} processed products from JSON file`);
+      console.log('ℹ️  Products are already in Vertex AI format, no additional transformation needed');
 
       // Step 5: Upload in batches (Retail API has limits)
       const batchSize = 100; // Adjust based on API limits

@@ -10,9 +10,9 @@ const path = require('path');
 const csv = require('csv-parser');
 
 // Configuration
-const PROJECT_ID = process.env.GOOGLE_CLOUD_PROJECT_ID || 'gwa-vertex';
+const PROJECT_ID = process.env.GOOGLE_CLOUD_PROJECT_ID || 'whitecap-us';
 const LOCATION = process.env.VERTEX_AI_LOCATION || 'global';
-const DATA_STORE_ID = process.env.VERTEX_AI_DATA_STORE_ID || 'service-foods-products';
+const DATA_STORE_ID = process.env.VERTEX_AI_DATA_STORE_ID || 'whitecap-products';
 console.log(`Using Project ID: ${PROJECT_ID}`, `Location: ${LOCATION}`, `Data Store ID: ${DATA_STORE_ID}`);
 // File paths
 const PRODUCTS_CSV = path.join(__dirname, '../Productextract.csv');
@@ -166,7 +166,7 @@ async function createVertexAIDataStore() {
   const gcloudCommand = `
 gcloud alpha discovery-engine data-stores create \\
   --data-store-id="${DATA_STORE_ID}" \\
-  --display-name="Service Foods Products" \\
+  --display-name="Whitecap Products" \\
   --industry-vertical=GENERIC \\
   --content-config=CONTENT_REQUIRED \\
   --solution-type=SOLUTION_TYPE_SEARCH \\
@@ -185,8 +185,8 @@ async function createVertexAISearchEngine() {
   
   const gcloudCommand = `
 gcloud alpha discovery-engine engines create \\
-  --engine-id="gwa-vertex-engine" \\
-  --display-name="Service Foods Search Engine" \\
+      --engine-id="whitecap-us-engine" \\
+    --display-name="Whitecap Search Engine" \\
   --data-store-ids="${DATA_STORE_ID}" \\
   --industry-vertical=GENERIC \\
   --location="${LOCATION}" \\
@@ -225,8 +225,8 @@ gcloud alpha discovery-engine documents import \\
   // Also create a sample Cloud Storage upload command
   const gsutilCommand = `
 # First, create a bucket and upload the file:
-gsutil mb gs://gwa-vertex-data
-gsutil cp ${outputFile} gs://gwa-vertex-data/
+gsutil mb gs://whitecap-us-data
+gsutil cp ${outputFile} gs://whitecap-us-data/
 
 # Then run the import command above with the correct GCS URI
 `;
@@ -240,7 +240,7 @@ gsutil cp ${outputFile} gs://gwa-vertex-data/
 async function generateVertexAISetupScript() {
   const setupScript = `#!/bin/bash
 
-# Vertex AI Search Setup Script for Service Foods
+# Vertex AI Search Setup Script for Whitecap
 # This script sets up the complete Vertex AI Search infrastructure
 
 set -e
@@ -248,10 +248,10 @@ set -e
 PROJECT_ID="${PROJECT_ID}"
 LOCATION="${LOCATION}"
 DATA_STORE_ID="${DATA_STORE_ID}"
-SEARCH_ENGINE_ID="gwa-vertex-engine"
-BUCKET_NAME="gwa-vertex-data"
+SEARCH_ENGINE_ID="whitecap-us-engine"
+BUCKET_NAME="whitecap-us-data"
 
-echo "🚀 Setting up Vertex AI Search for Service Foods..."
+echo "🚀 Setting up Vertex AI Search for Whitecap..."
 
 # 1. Enable required APIs
 echo "📡 Enabling required APIs..."
@@ -330,7 +330,7 @@ echo "3. Test the search functionality in your application"
 async function main() {
   try {
     log('\n' + '='.repeat(60), 'bold');
-    log('🔍 Service Foods - Vertex AI Search Data Indexing', 'bold');
+    log('🔍 Whitecap - Vertex AI Search Data Indexing', 'bold');
     log('='.repeat(60), 'bold');
     
     // Read CSV files
@@ -372,7 +372,7 @@ async function main() {
 GOOGLE_CLOUD_PROJECT_ID=${PROJECT_ID}
 VERTEX_AI_LOCATION=${LOCATION}
 VERTEX_AI_DATA_STORE_ID=${DATA_STORE_ID}
-VERTEX_AI_SEARCH_ENGINE_ID=gwa-vertex-engine
+VERTEX_AI_SEARCH_ENGINE_ID=whitecap-us-engine
 
 # Google Cloud Authentication
 # Option 1: Use gcloud auth application-default login

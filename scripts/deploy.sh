@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Service Foods Vertex AI Search - Vercel Deployment Script
+# Whitecap Vertex AI Search - Vercel Deployment Script
 # This script helps deploy your Next.js application to Vercel
 
-echo "🚀 Service Foods Vertex AI Search - Vercel Deployment"
+echo "🚀 Whitecap Vertex AI Search - Vercel Deployment"
 echo "=================================================="
 
 # Check if Vercel CLI is installed

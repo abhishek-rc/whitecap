@@ -1,6 +1,6 @@
 # Vertex AI Search for Commerce Setup Guide
 
-This guide walks you through setting up Google Cloud's Vertex AI Search for Commerce for the Service Foods search application.
+This guide walks you through setting up Google Cloud's Vertex AI Search for Commerce for the Whitecap search application.
 
 ## Overview
 
@@ -14,7 +14,7 @@ Vertex AI Search for Commerce (formerly Vertex AI Search for Retail) provides:
 1. **Google Cloud Project**: Active GCP project with billing enabled
 2. **APIs Enabled**: Retail API, Vertex AI API
 3. **Service Account**: With appropriate permissions
-4. **Sample Data**: Product and stock CSV files
+4. **Sample Data**: Product Excel files from Whitecap
 
 ## Step 1: Google Cloud Setup
 
@@ -22,10 +22,10 @@ Vertex AI Search for Commerce (formerly Vertex AI Search for Retail) provides:
 
 ```bash
 # Create a new project
-gcloud projects create gwa-vertex --name="Service Foods Search"
+gcloud projects create whitecap-us --name="Whitecap Search"
 
 # Set as default project
-gcloud config set project gwa-vertex
+gcloud config set project whitecap-us
 ```
 
 ### 1.2 Enable Required APIs
@@ -51,17 +51,17 @@ gcloud iam service-accounts create vertex-ai-search \
     --description="Service account for Vertex AI Search for Commerce"
 
 # Grant necessary roles
-gcloud projects add-iam-policy-binding gwa-vertex \
-    --member="serviceAccount:vertex-ai-search@gwa-vertex.iam.gserviceaccount.com" \
+gcloud projects add-iam-policy-binding whitecap-us \
+    --member="serviceAccount:vertex-ai-search@whitecap-us.iam.gserviceaccount.com" \
     --role="roles/retail.admin"
 
-gcloud projects add-iam-policy-binding gwa-vertex \
-    --member="serviceAccount:vertex-ai-search@gwa-vertex.iam.gserviceaccount.com" \
+gcloud projects add-iam-policy-binding whitecap-us \
+    --member="serviceAccount:vertex-ai-search@whitecap-us.iam.gserviceaccount.com" \
     --role="roles/aiplatform.user"
 
 # Create and download key
-gcloud iam service-accounts keys create vertex-ai-key.json \
-    --iam-account=vertex-ai-search@gwa-vertex.iam.gserviceaccount.com
+gcloud iam service-accounts keys create whitecap-us-vertex-key.json \
+    --iam-account=vertex-ai-search@whitecap-us.iam.gserviceaccount.com
 ```
 
 ## Step 2: Application Configuration
@@ -79,8 +79,8 @@ nano .env.local
 Update `.env.local` with your values:
 
 ```env
-GOOGLE_CLOUD_PROJECT_ID=gwa-vertex
-GOOGLE_APPLICATION_CREDENTIALS=./vertex-ai-key.json
+GOOGLE_CLOUD_PROJECT_ID=whitecap-us
+GOOGLE_APPLICATION_CREDENTIALS=./whitecap-us-vertex-key.json
 VERTEX_AI_LOCATION=global
 VERTEX_AI_CATALOG_ID=default_catalog
 VERTEX_AI_BRANCH_ID=default_branch
@@ -101,11 +101,19 @@ npm install --save-dev @types/node
 
 ### 3.1 Prepare Data Files
 
-Ensure your CSV files are in the project root:
-- `Productextract.csv`: Product catalog data
-- `Stockextract.csv`: Stock/inventory data
+Ensure your Excel files are in the project root:
+- `US_Products_1.xlsx`: Product catalog data
+- `US_Attribute_Values_1.xlsx`: Product attributes data
+- `US_Product_Warehouses_1.xlsx`: Stock/inventory data
 
-### 3.2 Upload to Vertex AI
+### 3.2 Process Whitecap Data
+
+```bash
+# Process Excel files into Vertex AI format
+node scripts/process-whitecap-data.js
+```
+
+### 3.3 Upload to Vertex AI
 
 ```bash
 # Make upload script executable
@@ -118,11 +126,11 @@ node scripts/upload-to-vertex-ai.js
 The script will:
 1. Create the catalog if it doesn't exist
 2. Set up serving configurations
-3. Transform CSV data to Retail API format
+3. Transform Excel data to Retail API format
 4. Upload products in batches
 5. Handle rate limiting and errors
 
-### 3.3 Monitor Upload Progress
+### 3.4 Monitor Upload Progress
 
 ```bash
 # Check operation status in Google Cloud Console
@@ -139,7 +147,7 @@ npm run dev
 
 ### 4.2 Test Search Functionality
 
-1. **Basic Search**: Try searching for "cheese" or "chocolate"
+1. **Basic Search**: Try searching for products from your catalog
 2. **Autocomplete**: Type partial product names
 3. **Faceted Search**: Use filters for brand, category, availability
 4. **Product Details**: Click on product cards to view details

@@ -1,10 +1,10 @@
 import { GoogleAuth } from 'google-auth-library';
 
 // Vertex AI Search configuration
-const PROJECT_ID = process.env.GOOGLE_CLOUD_PROJECT_ID || 'gwa-vertex';
+const PROJECT_ID = process.env.GOOGLE_CLOUD_PROJECT_ID || 'whitecap-us';
 const LOCATION = process.env.VERTEX_AI_LOCATION || 'global';
-const DATA_STORE_ID = process.env.VERTEX_AI_DATA_STORE_ID || 'service-foods-products';
-const SEARCH_ENGINE_ID = process.env.VERTEX_AI_SEARCH_ENGINE_ID || 'gwa-vertex-engine';
+const DATA_STORE_ID = process.env.VERTEX_AI_DATA_STORE_ID || 'whitecap-products';
+const SEARCH_ENGINE_ID = process.env.VERTEX_AI_SEARCH_ENGINE_ID || 'whitecap-us-engine';
 
 // Vertex AI Search API endpoints
 const DISCOVERY_ENGINE_API = 'https://discoveryengine.googleapis.com';

@@ -33,7 +33,7 @@ try {
   console.log('');
   console.log('Please set these environment variables in your Vercel dashboard:');
   console.log('');
-  console.log('1. GOOGLE_CLOUD_PROJECT_ID=gwa-vertex');
+  console.log('1. GOOGLE_CLOUD_PROJECT_ID=whitecap-us');
   console.log('2. VERTEX_AI_LOCATION=global');
   console.log('3. VERTEX_AI_CATALOG_ID=default_catalog');
   console.log('4. VERTEX_AI_BRANCH_ID=0');

@@ -135,22 +135,22 @@ export async function GET(request: NextRequest) {
 
       const searchPromise = vertexAICommerceService.search({
         query: exact ? `"${query}"` : (query || ''), // Use exact match with quotes if exact=true
-        visitorId,
-        ...(userId ? { userInfo: { userId } } : {}),
+        // visitorId,
+        // ...(userId ? { userInfo: { userId } } : {}),
         pageSize: limit,
         offset: offset,
-        filter,
-        orderBy,
-        facetSpecs: [
-          { facetKey: { key: 'attributes.brand' }, limit: 20 },
-          { facetKey: { key: 'categories' }, limit: 20 },
-          { facetKey: { key: 'availability' }, limit: 4 },
-          { facetKey: { key: 'attributes.vendor' }, limit: 20 },
-          { facetKey: { key: 'attributes.vendorName' }, limit: 20 },
-          { facetKey: { key: 'attributes.accset' }, limit: 20 },
-          { facetKey: { key: 'attributes.allergens' }, limit: 20 },
-          { facetKey: { key: 'priceInfo.price' }, limit: 10 }
-        ]
+        // filter,
+        // orderBy,
+        // facetSpecs: [
+        //   { facetKey: { key: 'attributes.brand' }, limit: 20 },
+        //   { facetKey: { key: 'categories' }, limit: 20 },
+        //   { facetKey: { key: 'availability' }, limit: 4 },
+        //   { facetKey: { key: 'attributes.vendor' }, limit: 20 },
+        //   { facetKey: { key: 'attributes.vendorName' }, limit: 20 },
+        //   { facetKey: { key: 'attributes.accset' }, limit: 20 },
+        //   { facetKey: { key: 'attributes.allergens' }, limit: 20 },
+        //   { facetKey: { key: 'priceInfo.price' }, limit: 10 }
+        // ]
       });
 
       const searchResponse = await Promise.race([searchPromise, timeoutPromise]);

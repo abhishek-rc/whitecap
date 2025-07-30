@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Upload Service Foods data with Allergens to Vertex AI Search for Commerce
+ * Upload Whitecap data with Allergens to Vertex AI Search for Commerce
  * This script processes the JSON file with allergen data and uploads enhanced products to Google Cloud Retail API
  */
 
@@ -11,7 +11,7 @@ const csv = require('csv-parser');
 const { GoogleAuth } = require('google-auth-library');
 
 // Configuration
-const PROJECT_ID = process.env.GOOGLE_CLOUD_PROJECT_ID || 'gwa-vertex';
+const PROJECT_ID = process.env.GOOGLE_CLOUD_PROJECT_ID || 'whitecap-us';
 const LOCATION = process.env.VERTEX_AI_LOCATION || 'global';
 const CATALOG_ID = process.env.VERTEX_AI_CATALOG_ID || 'default_catalog';
 const BRANCH_ID = process.env.VERTEX_AI_BRANCH_ID || '0';
@@ -23,10 +23,10 @@ class VertexAIAllergenDataUploader {
   constructor() {
     this.auth = new GoogleAuth({
       scopes: ['https://www.googleapis.com/auth/cloud-platform'],
-      keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS || '../gwa-vertex-service-foods.json',
+      keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS || '../whitecap-us-vertex-key.json',
     });
 
-    this.projectPath = `projects/gwa-vertex`;
+    this.projectPath = `projects/whitecap-us`;
     this.catalogPath = `${this.projectPath}/locations/global/catalogs/default_catalog`;
     this.branchPath = `${this.catalogPath}/branches/0`;
   }

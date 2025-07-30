@@ -1,10 +1,10 @@
-# Service Foods - Vertex AI Search for Commerce POC
+# Whitecap - Vertex AI Search for Commerce POC
 
-A comprehensive proof-of-concept implementation demonstrating Google Cloud's Vertex AI Search for Commerce capabilities for the Service Foods ECommerce platform. This Next.js application showcases advanced search functionality, intelligent product recommendations, and seamless integration with Google Cloud's retail AI services.
+A comprehensive proof-of-concept implementation demonstrating Google Cloud's Vertex AI Search for Commerce capabilities for the Whitecap ECommerce platform. This Next.js application showcases advanced search functionality, intelligent product recommendations, and seamless integration with Google Cloud's retail AI services.
 
 ## 🚀 Overview
 
-This POC demonstrates how modern AI-powered search and recommendation systems can transform the B2B foodservice industry experience. Built specifically for Service Foods Australia, the application processes over 19,929 products and 130,885 stock records to deliver intelligent search results and personalized recommendations.
+This cutting-edge implementation leverages Google Cloud's advanced AI capabilities to deliver a superior e-commerce search and discovery experience. Built specifically for Whitecap, the application processes product catalogs and warehouse data to deliver intelligent search results and personalized recommendations.
 
 ### Key Features
 
@@ -22,7 +22,7 @@ The application follows a modern, scalable architecture designed for enterprise 
 
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   Next.js App   │    │   Vertex AI      │    │   Service Foods │
+│   Next.js App   │    │   Vertex AI      │    │   Whitecap      │
 │   (Frontend)    │◄──►│   Search API     │◄──►│   Data Sources  │
 └─────────────────┘    └──────────────────┘    └─────────────────┘
          │                       │                       │
@@ -81,17 +81,26 @@ NEXT_PUBLIC_ENABLE_VERTEX_AI=true
 
 ### 3. Data Setup
 
-Place your CSV files in the project root:
-- `Productextract.csv` - Product catalog data
-- `Stockextract.csv` - Inventory/stock data
+Place your Excel files in the project root:
+- `US_Products_1.xlsx` - Product catalog data
+- `US_Attribute_Values_1.xlsx` - Product attributes data  
+- `US_Product_Warehouses_1.xlsx` - Inventory/stock data
 
-### 4. Upload Data to Vertex AI (Optional)
+### 4. Process Whitecap Data (Required)
+
+First, process the Excel files into Vertex AI format:
+
+```bash
+node scripts/process-whitecap-data.js
+```
+
+### 5. Upload Data to Vertex AI (Optional)
 
 ```bash
 node scripts/upload-to-vertex-ai.js
 ```
 
-### 5. Start Development Server
+### 6. Start Development Server
 
 ```bash
 npm run dev
@@ -131,18 +140,9 @@ To generate synthetic user events for model training, testing, or bulk ingestion
    node scripts/generate-user-events-ndjson.js
    ```
 
-   - The script reads `Productextract.csv` in your project root, filters for active, non-deleted products, and randomly generates 10,000 user events.
+   - The script reads processed Whitecap product data and generates realistic user events.
    - Events include types such as `detail-page-view`, `add-to-cart`, `purchase-complete`, `search`, and `home-page-view`.
    - Visitor IDs and event timestamps are randomized for realism.
-
-2. **Output**
-
-   - The generated file is `user-events.ndjson` in your project root.
-   - Each line is a valid JSON object, suitable for ingestion into Vertex AI Retail via API or batch import tools.
-
-3. **Customization**
-
-   - You can adjust the number of events, visitor pool size, or event schema by editing the top of `scripts/generate-user-events-ndjson.js`.
 
 ---
 
@@ -523,7 +523,7 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 ## 🙏 Acknowledgments
 
 - **Google Cloud Team** for Vertex AI Search for Commerce
-- **Service Foods Australia** for providing the business context and data
+- **Whitecap** for providing the business context and data
 - **Next.js Team** for the excellent framework
 - **Vercel** for deployment platform
 
@@ -537,5 +537,5 @@ For technical support or questions:
 
 ---
 
-**Built with ❤️ by Manus AI for Service Foods Australia**
+**Built with ❤️ by Manus AI for Whitecap**
 

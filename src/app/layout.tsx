@@ -6,8 +6,8 @@ import { CartProvider } from '@/components/CartContext';
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'White Cap - Vertex AI Search POC',
-  description: 'A proof of concept for Vertex AI-based search solution for White Cap ECommerce platform',
+  title: 'Whitecap - Vertex AI Search POC',
+  description: 'A proof of concept for Vertex AI-based search solution for Whitecap ECommerce platform',
 }
 
 export default function RootLayout({
