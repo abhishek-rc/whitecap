@@ -14,11 +14,10 @@ import RecommendationsWidget from '@/components/RecommendationsWidget';
 import Link from 'next/link';
 
 const DEMO_USERS = [
-  { id: "tahir", name: "Tahir", visitorId: "42111579-af5d-4c39-a2e3-eea9baeeb985" },
-  { id: "tahsin", name: "Tahsin", visitorId: "29b74c36-1c2b-4c73-92d9-c89b717fb1cb" },
-  { id: "pooja", name: "Pooja", visitorId: "dd8e0ccc-9a95-4662-bdc3-208f708d8f4e" },
-  { id: "mahveer", name: "Mahveer", visitorId: "40f2c915-d265-4312-b618-31c969b56cdb" },
-];
+  { id: "tahir", name: "Tahir", visitorId: "160463000" },
+  { id: "tahsin", name: "Tahsin", visitorId: "95375000" },
+  { id: "pooja", name: "Pooja", visitorId: "10000005743" },
+  { id: "mahveer", name: "Mahveer", visitorId: "59092000" },];
 
 function getStoredDemoUserId() {
   if (typeof window === 'undefined') return null;
@@ -50,6 +49,11 @@ function SearchPageContent() {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState('relevance');
+  
+  // Autocomplete state
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
 
   const itemsPerPage = 20;
 
@@ -72,6 +76,42 @@ function SearchPageContent() {
   useEffect(() => {
     setStoredDemoUserId(selectedUserId);
   }, [selectedUserId]);
+
+  // Debounced autocomplete on keystroke
+  useEffect(() => {
+    if (!searchQuery.trim() || searchQuery.length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      fetchSuggestions(searchQuery);
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
+
+  const fetchSuggestions = async (searchQuery: string) => {
+    if (!searchQuery.trim()) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    try {
+      const visitorId = getCurrentVisitorId(selectedUserId);
+      const response = await fetch(`/api/autocomplete?q=${encodeURIComponent(searchQuery)}&limit=8&visitorId=${encodeURIComponent(visitorId)}`);
+      const data = await response.json();
+      if (Array.isArray(data.suggestions)) {
+        setSuggestions(data.suggestions);
+        setShowSuggestions(true);
+        setSelectedSuggestionIndex(-1);
+      }
+    } catch (error) {
+      console.error('Autocomplete error:', error);
+    }
+  };
 
   const performSearch = useCallback(async (query: string, newFilters: SearchFilters = {}, page: number = 1, sort: string = 'relevance') => {
     console.log('🔍 Performing search with query:', query, 'filters:', newFilters, 'page:', page, 'sort:', sort);
