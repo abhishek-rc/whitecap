@@ -50,6 +50,11 @@ function SearchPageContent() {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState('relevance');
+  
+  // Autocomplete state
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
 
   const itemsPerPage = 20;
 
@@ -72,6 +77,42 @@ function SearchPageContent() {
   useEffect(() => {
     setStoredDemoUserId(selectedUserId);
   }, [selectedUserId]);
+
+  // Debounced autocomplete on keystroke
+  useEffect(() => {
+    if (!searchQuery.trim() || searchQuery.length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      fetchSuggestions(searchQuery);
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
+
+  const fetchSuggestions = async (searchQuery: string) => {
+    if (!searchQuery.trim()) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    try {
+      const visitorId = getCurrentVisitorId(selectedUserId);
+      const response = await fetch(`/api/autocomplete?q=${encodeURIComponent(searchQuery)}&limit=8&visitorId=${encodeURIComponent(visitorId)}`);
+      const data = await response.json();
+      if (Array.isArray(data.suggestions)) {
+        setSuggestions(data.suggestions);
+        setShowSuggestions(true);
+        setSelectedSuggestionIndex(-1);
+      }
+    } catch (error) {
+      console.error('Autocomplete error:', error);
+    }
+  };
 
   const performSearch = useCallback(async (query: string, newFilters: SearchFilters = {}, page: number = 1, sort: string = 'relevance') => {
     console.log('🔍 Performing search with query:', query, 'filters:', newFilters, 'page:', page, 'sort:', sort);

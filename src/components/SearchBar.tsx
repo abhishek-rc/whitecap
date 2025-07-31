@@ -32,6 +32,21 @@ export default function SearchBar({ onSearch, initialQuery = '' }: SearchBarProp
     setQuery(initialQuery);
   }, [initialQuery]);
 
+  // Debounced autocomplete on keystroke
+  useEffect(() => {
+    if (!query.trim() || query.length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      fetchSuggestions(query);
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [query]);
+
   const fetchSuggestions = async (searchQuery: string) => {
     if (!searchQuery.trim()) {
       setSuggestions([]);
