@@ -166,7 +166,7 @@ export default function Home() {
               <div className="relative">
                 <input
                   type="text"
-                  placeholder="Search by name, brand, product id..."
+                  placeholder="Search by name, brand, product id."
                   className="w-48 text-white sm:w-64 lg:w-80 pl-3 pr-12 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 text-gray-800"
                   onKeyDown={(e) => e.key === 'Enter' && handleSearchQuery((e.target as HTMLInputElement).value)}
                 />
