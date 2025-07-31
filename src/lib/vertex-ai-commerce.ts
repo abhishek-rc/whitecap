@@ -591,10 +591,6 @@ class VertexAICommerceService {
             limit: 20
           },
           {
-            facetKey: { key: 'attributes.isSFPreferred' },
-            limit: 2
-          },
-          {
             facetKey: { key: 'availability' },
             limit: 4
           }
@@ -900,19 +896,46 @@ class VertexAICommerceService {
           // Skip allergens filter - not supported by Vertex AI, will be handled locally
           console.log('🚫 Skipping allergens filter for Vertex AI (not supported):', value);
         } else if (key === 'availability' && value) {
-          filterParts.push(`availability: ANY("${value}")`);
-        } else if (key === 'category' && value) {
-          filterParts.push(`categories: ANY("${value}")`);
+          if (Array.isArray(value) && value.length > 0) {
+            const valueStr = value.map(v => `"${v}"`).join(',');
+            filterParts.push(`availability: ANY(${valueStr})`);
+          } else if (typeof value === 'string') {
+            filterParts.push(`availability: ANY("${value}")`);
+          }
+        } else if (key === 'categories' && value) {
+          if (Array.isArray(value) && value.length > 0) {
+            const valueStr = value.map(v => `"${v}"`).join(',');
+            filterParts.push(`categories: ANY(${valueStr})`);
+          } else if (typeof value === 'string') {
+            filterParts.push(`categories: ANY("${value}")`);
+          }
         } else if (key === 'brand' && value) {
-          filterParts.push(`attributes.brand: ANY("${value}")`);
-        } else if (Array.isArray(value)) {
+          if (Array.isArray(value) && value.length > 0) {
+            const valueStr = value.map(v => `"${v}"`).join(',');
+            filterParts.push(`attributes.brand: ANY(${valueStr})`);
+          } else if (typeof value === 'string') {
+            filterParts.push(`attributes.brand: ANY("${value}")`);
+          }
+        } else if (key === 'priceRange' && value && typeof value === 'object') {
+          // Handle price range filter
+          const priceRange = value as { min?: number; max?: number };
+          if (priceRange.min !== undefined && priceRange.max !== undefined) {
+            filterParts.push(`priceInfo.price: [${priceRange.min}, ${priceRange.max}]`);
+          } else if (priceRange.min !== undefined) {
+            filterParts.push(`priceInfo.price >= ${priceRange.min}`);
+          } else if (priceRange.max !== undefined) {
+            filterParts.push(`priceInfo.price <= ${priceRange.max}`);
+          }
+        } else if (Array.isArray(value) && value.length > 0) {
           const valueStr = value.map(v => `"${v}"`).join(',');
           filterParts.push(`${key}: ANY(${valueStr})`);
         }
       }
     });
 
-    return filterParts.join(' AND ');
+    const filterString = filterParts.join(' AND ');
+    console.log('🔧 Built Vertex AI filter string:', filterString);
+    return filterString;
   }
 
   /**

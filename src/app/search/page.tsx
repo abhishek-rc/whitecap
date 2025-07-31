@@ -14,10 +14,10 @@ import RecommendationsWidget from '@/components/RecommendationsWidget';
 import Link from 'next/link';
 
 const DEMO_USERS = [
-  { id: "tahir", name: "Tahir", visitorId: "42111579-af5d-4c39-a2e3-eea9baeeb985" },
-  { id: "tahsin", name: "Tahsin", visitorId: "29b74c36-1c2b-4c73-92d9-c89b717fb1cb" },
-  { id: "pooja", name: "Pooja", visitorId: "dd8e0ccc-9a95-4662-bdc3-208f708d8f4e" },
-  { id: "mahveer", name: "Mahveer", visitorId: "40f2c915-d265-4312-b618-31c969b56cdb" },
+  { id: "tahir", name: "Tahir", visitorId: "160463000" },
+  { id: "tahsin", name: "Tahsin", visitorId: "95375000" },
+  { id: "pooja", name: "Pooja", visitorId: "10000005743" },
+  { id: "mahveer", name: "Mahveer", visitorId: "59092000" },
 ];
 
 function getStoredDemoUserId() {
@@ -64,7 +64,7 @@ function SearchPageContent() {
     if (userId) setSelectedUserId(userId);
     if (query) setSearchQuery(query);
     if (category) {
-      setFilters(prev => ({ ...prev, category: [category] }));
+      setFilters(prev => ({ ...prev, categories: [category] }));
     }
   }, [searchParams]);
 
@@ -85,8 +85,8 @@ function SearchPageContent() {
       });
 
       // Add filters to params
-      if (newFilters.category?.length) {
-        newFilters.category.forEach(cat => params.append('category', cat));
+      if (newFilters.categories?.length) {
+        newFilters.categories.forEach(cat => params.append('category', cat));
       }
       if (newFilters.brand?.length) {
         newFilters.brand.forEach(brand => params.append('brand', brand));
@@ -476,7 +476,7 @@ function SearchPageContent() {
             {!loading && (!searchQuery || searchResult?.products.length === 0) && (
               <div className="mt-8">
                 <RecommendationsWidget
-                  categories={filters.category}
+                  categories={filters.categories}
                   userPreferences={{ sfPreferred: filters.sfPreferred }}
                   limit={12}
                   visitorId={getCurrentVisitorId(selectedUserId)}

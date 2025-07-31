@@ -77,7 +77,7 @@ class SimpleCache {
     page: number;
     offset?: number;
     limit: number;
-    category?: string;
+    categories?: string;
     brand?: string;
     sfPreferred?: boolean;
     availability?: string;
@@ -93,7 +93,7 @@ class SimpleCache {
       page: params.page,
       offset: params.offset || 0,
       limit: params.limit,
-      category: params.category || '',
+      categories: params.categories || '',
       brand: params.brand || '',
       sfPreferred: params.sfPreferred || false,
       availability: params.availability || '',

@@ -57,7 +57,7 @@ export interface Stock {
 }
 
 export interface SearchFilters {
-  category?: string[];
+  categories?: string[];
   brand?: string[];
   priceRange?: {
     min?: number;
@@ -377,9 +377,9 @@ class DataService {
     }
 
     // Apply filters
-    if (filters.category?.length) {
+    if (filters.categories?.length) {
       filteredProducts = filteredProducts.filter(p => 
-        filters.category!.includes(p.category) || filters.category!.includes(p.webCategory)
+        filters.categories!.includes(p.category) || filters.categories!.includes(p.webCategory)
       );
     }
 

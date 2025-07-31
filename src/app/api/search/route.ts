@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
       page,
       offset,
       limit,
-      category: categories.join(','),
+      categories: categories.join(','),
       brand: brands.join(','),
       sfPreferred,
       availability: availabilities.join(','),
@@ -54,18 +54,37 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    // Debug: Log extracted parameters
+    console.log('🔍 Extracted search parameters:', {
+      query,
+      categories,
+      brands,
+      sfPreferred,
+      availabilities,
+      warehouses,
+      accsets,
+      allergens,
+      priceMin,
+      priceMax,
+      sortBy
+    });
+
     // Build filters
     const filters: Record<string, unknown> = {};
-    if (categories.length > 0) filters.category = categories;
+    if (categories.length > 0) filters.categories = categories;
     if (brands.length > 0) filters.brand = brands;
     if (sfPreferred) filters.sfPreferred = true;
     if (availabilities.length > 0) filters.availability = availabilities;
     if (warehouses.length > 0) filters.warehouse = warehouses;
     if (accsets.length > 0) filters.accset = accsets;
     if (allergens.length > 0) filters.allergens = allergens;
-    if (priceMin !== undefined && priceMax !== undefined) {
-      filters.priceRange = { min: priceMin, max: priceMax };
+    if (priceMin !== undefined || priceMax !== undefined) {
+      filters.priceRange = {} as { min?: number; max?: number };
+      if (priceMin !== undefined) (filters.priceRange as { min?: number; max?: number }).min = priceMin;
+      if (priceMax !== undefined) (filters.priceRange as { min?: number; max?: number }).max = priceMax;
     }
+
+    console.log('🎯 Built filters object:', filters);
 
     // **PRIMARY STRATEGY: Vertex AI Search**
     console.log('🚀 Starting Vertex AI search for:', query);
@@ -135,22 +154,21 @@ export async function GET(request: NextRequest) {
 
       const searchPromise = vertexAICommerceService.search({
         query: exact ? `"${query}"` : (query || ''), // Use exact match with quotes if exact=true
-        // visitorId,
-        // ...(userId ? { userInfo: { userId } } : {}),
+        visitorId,
+        ...(userId ? { userInfo: { userId } } : {}),
         pageSize: limit,
         offset: offset,
-        // filter,
-        // orderBy,
-        // facetSpecs: [
-        //   { facetKey: { key: 'attributes.brand' }, limit: 20 },
-        //   { facetKey: { key: 'categories' }, limit: 20 },
-        //   { facetKey: { key: 'availability' }, limit: 4 },
-        //   { facetKey: { key: 'attributes.vendor' }, limit: 20 },
-        //   { facetKey: { key: 'attributes.vendorName' }, limit: 20 },
-        //   { facetKey: { key: 'attributes.accset' }, limit: 20 },
-        //   { facetKey: { key: 'attributes.allergens' }, limit: 20 },
-        //   { facetKey: { key: 'priceInfo.price' }, limit: 10 }
-        // ]
+        filter,
+        orderBy,
+        facetSpecs: [
+          { facetKey: { key: 'attributes.brand' }, limit: 20 },
+          { facetKey: { key: 'categories' }, limit: 20 },
+          { facetKey: { key: 'availability' }, limit: 4 },
+          { facetKey: { key: 'attributes.vendor' }, limit: 20 },
+          { facetKey: { key: 'attributes.vendorName' }, limit: 20 },
+          { facetKey: { key: 'attributes.accset' }, limit: 20 },
+          { facetKey: { key: 'priceInfo.price' }, limit: 10 }
+        ]
       });
 
       const searchResponse = await Promise.race([searchPromise, timeoutPromise]);

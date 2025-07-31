@@ -151,9 +151,8 @@ class VertexAISearchService {
 
       // Build facet specifications for product attributes
       const facetSpecs: FacetSpec[] = [
-        { facetKey: { key: 'category' }, limit: 20 },
+        { facetKey: { key: 'categories' }, limit: 20 },
         { facetKey: { key: 'brand' }, limit: 20 },
-        { facetKey: { key: 'isSFPreferred' }, limit: 2 },
         { facetKey: { key: 'availability' }, limit: 10 },
         { facetKey: { key: 'webCategory' }, limit: 20 },
       ];

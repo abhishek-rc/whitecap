@@ -8,10 +8,10 @@ import RecommendationsWidget from '@/components/RecommendationsWidget';
 
 // Demo user logic (reuse from homepage)
 const DEMO_USERS = [
-  { id: "tahir", name: "Tahir", visitorId: "42111579-af5d-4c39-a2e3-eea9baeeb985" },
-  { id: "tahsin", name: "Tahsin", visitorId: "29b74c36-1c2b-4c73-92d9-c89b717fb1cb" },
-  { id: "pooja", name: "Pooja", visitorId: "dd8e0ccc-9a95-4662-bdc3-208f708d8f4e" },
-  { id: "mahveer", name: "Mahveer", visitorId: "40f2c915-d265-4312-b618-31c969b56cdb" },
+  { id: "tahir", name: "Tahir", visitorId: "160463000" },
+  { id: "tahsin", name: "Tahsin", visitorId: "95375000" },
+  { id: "pooja", name: "Pooja", visitorId: "10000005743" },
+  { id: "mahveer", name: "Mahveer", visitorId: "59092000" },
 ];
 
 function getCurrentVisitorId(selectedUserId: string | null): string {

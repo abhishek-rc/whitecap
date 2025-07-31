@@ -117,16 +117,16 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
         let hasChanges = false;
         
         // Check if current category filters are still valid
-        if (filters.category?.length) {
-          const validCategories = filters.category.filter(cat => 
+        if (filters.categories?.length) {
+          const validCategories = filters.categories.filter(cat => 
             facets.categories?.some(f => f.value === cat)
           );
-          if (validCategories.length !== filters.category.length) {
+          if (validCategories.length !== filters.categories.length) {
             hasChanges = true;
             console.log('Some category filters are no longer valid');
           }
           if (validCategories.length > 0) {
-            validFilters.category = validCategories;
+            validFilters.categories = validCategories;
           }
         }
         
@@ -239,14 +239,14 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
   };
 
   const handleCategoryChange = (category: string, checked: boolean) => {
-    const currentCategories = filters.category || [];
+    const currentCategories = filters.categories || [];
     const newCategories = checked
       ? [...currentCategories, category]
-      : currentCategories.filter(c => c !== category);
+      : currentCategories.filter((c: string) => c !== category);
     
     onFilterChange({
       ...filters,
-      category: newCategories.length > 0 ? newCategories : undefined
+      categories: newCategories.length > 0 ? newCategories : undefined
     });
   };
 
@@ -337,7 +337,7 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
 
   const hasActiveFilters = () => {
     return !!(
-      filters.category?.length ||
+      filters.categories?.length ||
       filters.brand?.length ||
       filters.sfPreferred ||
       filters.priceRange?.min ||
@@ -423,7 +423,7 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
               <label key={category.value} className="flex items-center">
                 <input
                   type="checkbox"
-                  checked={filters.category?.includes(category.value) || false}
+                  checked={filters.categories?.includes(category.value) || false}
                   onChange={(e) => handleCategoryChange(category.value, e.target.checked)}
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
@@ -609,7 +609,7 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
                 </button>
               </span>
             )}
-            {filters.category?.map((category) => (
+            {filters.categories?.map((category: string) => (
               <span
                 key={category}
                 className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 mr-1 mb-1"
