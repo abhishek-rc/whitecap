@@ -507,7 +507,7 @@ export default function AIDrawer() {
                                         }`}
                                 >
                                     <p className="text-sm">{message.content}</p>
-                                    <p className="text-xs mt-1 opacity-70">
+                                    <p className="text-xs mt-1 opacity-70" suppressHydrationWarning>
                                         {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </p>
                                 </div>
