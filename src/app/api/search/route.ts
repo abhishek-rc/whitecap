@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
   const availabilities = searchParams.getAll('availability');
   const warehouses = searchParams.getAll('warehouse');
   const accsets = searchParams.getAll('accset');
-  const allergens = searchParams.getAll('allergens');
+
   const priceMin = searchParams.get('priceMin') ? parseFloat(searchParams.get('priceMin')!) : undefined;
   const priceMax = searchParams.get('priceMax') ? parseFloat(searchParams.get('priceMax')!) : undefined;
   const sortBy = searchParams.get('sortBy') || '';
@@ -36,7 +36,6 @@ export async function GET(request: NextRequest) {
       availability: availabilities.join(','),
       warehouse: warehouses.join(','),
       accset: accsets.join(','),
-      allergens: allergens.join(','),
       priceMin,
       priceMax,
       sortBy
@@ -62,7 +61,6 @@ export async function GET(request: NextRequest) {
     if (availabilities.length > 0) filters.availability = availabilities;
     if (warehouses.length > 0) filters.warehouse = warehouses;
     if (accsets.length > 0) filters.accset = accsets;
-    if (allergens.length > 0) filters.allergens = allergens;
     if (priceMin !== undefined && priceMax !== undefined) {
       filters.priceRange = { min: priceMin, max: priceMax };
     }
@@ -135,22 +133,21 @@ export async function GET(request: NextRequest) {
 
       const searchPromise = vertexAICommerceService.search({
         query: exact ? `"${query}"` : (query || ''), // Use exact match with quotes if exact=true
-        // visitorId,
-        // ...(userId ? { userInfo: { userId } } : {}),
+        visitorId,
+        ...(userId ? { userInfo: { userId } } : {}),
         pageSize: limit,
         offset: offset,
-        // filter,
-        // orderBy,
-        // facetSpecs: [
-        //   { facetKey: { key: 'attributes.brand' }, limit: 20 },
-        //   { facetKey: { key: 'categories' }, limit: 20 },
-        //   { facetKey: { key: 'availability' }, limit: 4 },
-        //   { facetKey: { key: 'attributes.vendor' }, limit: 20 },
-        //   { facetKey: { key: 'attributes.vendorName' }, limit: 20 },
-        //   { facetKey: { key: 'attributes.accset' }, limit: 20 },
-        //   { facetKey: { key: 'attributes.allergens' }, limit: 20 },
-        //   { facetKey: { key: 'priceInfo.price' }, limit: 10 }
-        // ]
+        filter,
+        orderBy,
+        facetSpecs: [
+          { facetKey: { key: 'attributes.brand' }, limit: 20 },
+          { facetKey: { key: 'categories' }, limit: 20 },
+          { facetKey: { key: 'availability' }, limit: 4 },
+          { facetKey: { key: 'attributes.vendor' }, limit: 20 },
+          { facetKey: { key: 'attributes.vendorName' }, limit: 20 },
+          { facetKey: { key: 'attributes.accset' }, limit: 20 },
+          { facetKey: { key: 'priceInfo.price' }, limit: 10 }
+        ]
       });
 
       const searchResponse = await Promise.race([searchPromise, timeoutPromise]);
@@ -216,7 +213,6 @@ export async function GET(request: NextRequest) {
         const vendorName = attributes.vendorName?.text?.[0] || attributes.vendorName?.textValue?.[0] || vendor;
         const units = attributes.units?.text?.[0] || attributes.units?.textValue?.[0] || '';
         const accset = attributes.accset?.text?.[0] || attributes.accset?.textValue?.[0] || '';
-        const allergens = attributes.allergens?.text || attributes.allergens?.textValue || [];
         const sku = attributes.sku?.text?.[0] || attributes.sku?.textValue?.[0] || resultId;
         
         return {
@@ -236,7 +232,6 @@ export async function GET(request: NextRequest) {
           vendorName: vendorName,
           units: units,
           accset: accset,
-          allergens: allergens,
           webCategory: category,
           webSubCategory: product.categories?.[1] || '',
           keywords: product.tags || [],
@@ -261,7 +256,6 @@ export async function GET(request: NextRequest) {
         const brandCount: { [key: string]: number } = {};
         const availabilityCount: { [key: string]: number } = {};
         const accsetCount: { [key: string]: number } = {};
-        const allergenCount: { [key: string]: number } = {};
         const vendorCount: { [key: string]: number } = {};
 
         products.forEach(product => {
@@ -285,16 +279,25 @@ export async function GET(request: NextRequest) {
             accsetCount[product.accset] = (accsetCount[product.accset] || 0) + 1;
           }
           
-          // Count allergens
-          if (product.allergens && Array.isArray(product.allergens)) {
-            product.allergens.forEach((allergen: string) => {
-              allergenCount[allergen] = (allergenCount[allergen] || 0) + 1;
-            });
-          }
+
           
           // Count vendors (warehouses)
           if (product.vendorName) {
             vendorCount[product.vendorName] = (vendorCount[product.vendorName] || 0) + 1;
+          }
+        });
+
+        // Ensure standard availability options are always present
+        const standardAvailability = ['IN_STOCK', 'LOW_STOCK', 'OUT_OF_STOCK'];
+        const availabilityFacets = standardAvailability.map(status => ({
+          value: status,
+          count: availabilityCount[status] || 0
+        }));
+        
+        // Add any other availability statuses that exist in the data
+        Object.entries(availabilityCount).forEach(([status, count]) => {
+          if (!standardAvailability.includes(status)) {
+            availabilityFacets.push({ value: status, count });
           }
         });
 
@@ -305,13 +308,8 @@ export async function GET(request: NextRequest) {
           brands: Object.entries(brandCount)
             .map(([value, count]) => ({ value, count }))
             .sort((a, b) => b.count - a.count),
-          availability: Object.entries(availabilityCount)
-            .map(([value, count]) => ({ value, count }))
-            .sort((a, b) => b.count - a.count),
+          availability: availabilityFacets.sort((a, b) => b.count - a.count),
           accsets: Object.entries(accsetCount)
-            .map(([value, count]) => ({ value, count }))
-            .sort((a, b) => b.count - a.count),
-          allergens: Object.entries(allergenCount)
             .map(([value, count]) => ({ value, count }))
             .sort((a, b) => b.count - a.count),
           warehouses: Object.entries(vendorCount)
@@ -329,18 +327,8 @@ export async function GET(request: NextRequest) {
         brands: searchResponse.facets?.find(f => f.key === 'attributes.brand')?.values?.map((v: any) => ({ value: v.value, count: v.count })) || [],
         availability: searchResponse.facets?.find(f => f.key === 'availability')?.values?.map((v: any) => ({ value: v.value, count: v.count })) || [],
         accsets: searchResponse.facets?.find(f => f.key === 'attributes.accset')?.values?.map((v: any) => ({ value: v.value, count: v.count })) || [],
-        allergens: searchResponse.facets?.find(f => f.key === 'attributes.allergens')?.values?.map((v: any) => ({ value: v.value, count: v.count })) || [],
         warehouses: searchResponse.facets?.find(f => f.key === 'attributes.vendor')?.values?.map((v: any) => ({ value: v.value, count: v.count })) || 
-                   searchResponse.facets?.find(f => f.key === 'attributes.vendorName')?.values?.map((v: any) => ({ value: v.value, count: v.count })) || [],
-        // Allergen facets
-        allergenFree: searchResponse.facets?.find(f => f.key === 'attributes.allergenFree')?.values?.map((v: any) => ({ value: v.value, count: v.count })) || [],
-        hasMilk: searchResponse.facets?.find(f => f.key === 'attributes.hasMilk')?.values?.map((v: any) => ({ value: v.value, count: v.count })) || [],
-        hasEggs: searchResponse.facets?.find(f => f.key === 'attributes.hasEggs')?.values?.map((v: any) => ({ value: v.value, count: v.count })) || [],
-        hasNuts: searchResponse.facets?.find(f => f.key === 'attributes.hasNuts')?.values?.map((v: any) => ({ value: v.value, count: v.count })) || [],
-        hasGluten: searchResponse.facets?.find(f => f.key === 'attributes.hasGluten')?.values?.map((v: any) => ({ value: v.value, count: v.count })) || [],
-        hasSoy: searchResponse.facets?.find(f => f.key === 'attributes.hasSoy')?.values?.map((v: any) => ({ value: v.value, count: v.count })) || [],
-        hasFish: searchResponse.facets?.find(f => f.key === 'attributes.hasFish')?.values?.map((v: any) => ({ value: v.value, count: v.count })) || [],
-        hasShellfish: searchResponse.facets?.find(f => f.key === 'attributes.hasShellfish')?.values?.map((v: any) => ({ value: v.value, count: v.count })) || []
+                   searchResponse.facets?.find(f => f.key === 'attributes.vendorName')?.values?.map((v: any) => ({ value: v.value, count: v.count })) || []
       } : generateFacetsFromProducts(products);
 
       // Apply post-processing sorting for unsupported Vertex AI sorts or textual fields
@@ -505,30 +493,114 @@ export async function GET(request: NextRequest) {
         }
       });
       
-      // **FALLBACK: Return empty but valid response**
-      const response = {
-        success: false,
-        data: {
-          products: [],
-          facets: {
-            categories: [],
-            brands: [],
-            priceRanges: [],
-            warehouses: [],
-            accsets: [],
-            availability: [],
-          },
-          total: 0,
-          queryTime: Date.now() - startTime,
-        },
-        nextPageToken: null,
-        source: 'vertex-ai-error',
-        error: vertexError instanceof Error ? vertexError.message : String(vertexError),
-        errorType: 'vertex-ai-failure',
-        timestamp: new Date().toISOString()
-      };
+      // **FALLBACK: Try local data service with filtering**
+      console.log('🔄 Vertex AI failed, falling back to local data service with filtering...');
+      try {
+        const { dataService } = await import('@/lib/data');
+        await dataService.initialize();
+        
+        const localFilters: any = {};
+        if (categories.length > 0) localFilters.category = categories;
+        if (brands.length > 0) localFilters.brand = brands;
+        if (sfPreferred) localFilters.sfPreferred = true;
+        if (availabilities.length > 0) localFilters.availability = availabilities;
+        if (warehouses.length > 0) localFilters.warehouse = warehouses;
+        if (accsets.length > 0) localFilters.accset = accsets;
+        if (priceMin !== undefined && priceMax !== undefined) {
+          localFilters.priceRange = { min: priceMin, max: priceMax };
+        }
+        
+        const localSearchResult = await dataService.search(query, localFilters, offset, limit, sortBy);
+        
+        // Transform local results to match expected format
+        const localProducts = localSearchResult.products.map((product: any) => ({
+          id: product.sku,
+          sku: product.sku,
+          displayName: product.displayName,
+          title: product.displayName,
+          description: product.description,
+          category: product.category,
+          brand: product.brand,
+          vendor: product.vendor,
+          vendorName: product.vendorName,
+          units: product.units,
+          isSFPreferred: product.isSFPreferred,
+          imageURL: product.imageURL,
+          availability: product.availability,
+          availableQuantity: product.availableQuantity,
+          totalStock: product.totalStock || 0,
+          stockWarehouses: product.stockWarehouses || 0,
+          categoryDesc: product.categoryDesc || '',
+          price: product.price || 0,
+          urlSlug: product.urlSlug || '',
+          accset: product.accset || '',
+          keywords: product.keywords || [],
+          orderLastMonth: product.orderLastMonth || 0,
+          isActive: product.isActive !== false,
+          isDeleted: product.isDeleted === true,
+          webCategory: product.webCategory || '',
+          webSubCategory: product.webSubCategory || '',
+          webCategoryDesc: product.webCategoryDesc || '',
+          webDesc: product.webDesc || '',
+          webSubDesc: product.webSubDesc || '',
+          warehouse: product.warehouse || [],
+          // Raw data for consistency
+          images: [],
+          attributes: {},
+          priceInfo: { price: product.price || 0 },
+          rating: {},
+          tags: product.keywords || [],
+          categories: [product.category].filter(Boolean),
+          variants: []
+        }));
 
-      return NextResponse.json(response);
+        const response = {
+          success: true,
+          data: {
+            products: localProducts,
+            facets: localSearchResult.facets,
+            total: localSearchResult.total,
+            queryTime: Date.now() - startTime,
+          },
+          nextPageToken: null,
+          source: 'local-fallback'
+        };
+
+        console.log(`✅ Local fallback successful: ${localProducts.length} products with filters`);
+        cache.set(cacheKey, response.data, 2 * 60 * 1000); // Cache for 2 minutes
+        return NextResponse.json(response);
+      } catch (localError) {
+        console.error('❌ Local fallback also failed:', localError);
+        
+        // **ULTIMATE FALLBACK: Return empty but valid response**
+        const response = {
+          success: false,
+          data: {
+            products: [],
+            facets: {
+              categories: [],
+              brands: [],
+              priceRanges: [],
+              warehouses: [],
+              accsets: [],
+              availability: [
+                { value: 'IN_STOCK', count: 0 },
+                { value: 'LOW_STOCK', count: 0 },
+                { value: 'OUT_OF_STOCK', count: 0 }
+              ]
+            },
+            total: 0,
+            queryTime: Date.now() - startTime,
+          },
+          nextPageToken: null,
+          source: 'vertex-ai-error',
+          error: vertexError instanceof Error ? vertexError.message : String(vertexError),
+          errorType: 'vertex-ai-failure',
+          timestamp: new Date().toISOString()
+        };
+
+        return NextResponse.json(response);
+      }
     }
   } catch (error) {
     console.error('❌ Search API error:', error);
@@ -584,7 +656,11 @@ export async function GET(request: NextRequest) {
           priceRanges: [], 
           warehouses: [],
           accsets: [],
-          availability: [],
+          availability: [
+            { value: 'IN_STOCK', count: 0 },
+            { value: 'LOW_STOCK', count: 0 },
+            { value: 'OUT_OF_STOCK', count: 0 }
+          ]
         },
         total: 0,
         queryTime: 0,

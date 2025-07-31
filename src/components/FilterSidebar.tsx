@@ -10,7 +10,6 @@ interface Facets {
   warehouses: Array<{ value: string; count: number }>;
   accsets: Array<{ value: string; count: number }>;
   availability: Array<{ value: string; count: number }>;
-  allergens: Array<{ value: string; count: number }>;
 }
 
 interface FilterSidebarProps {
@@ -67,16 +66,6 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
       { value: 'IN_STOCK', count: 145 },
       { value: 'LOW_STOCK', count: 23 },
       { value: 'OUT_OF_STOCK', count: 5 }
-    ],
-    allergens: [
-      { value: 'Gluten', count: 67 },
-      { value: 'Dairy', count: 54 },
-      { value: 'Nuts', count: 43 },
-      { value: 'Soy', count: 38 },
-      { value: 'Eggs', count: 29 },
-      { value: 'Fish', count: 21 },
-      { value: 'Shellfish', count: 15 },
-      { value: 'Sesame', count: 12 }
     ]
   };
 
@@ -186,19 +175,7 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
           }
         }
         
-        // Check if current allergen filters are still valid
-        if (filters.allergens?.length) {
-          const validAllergens = filters.allergens.filter(allergen => 
-            facets.allergens?.some(f => f.value === allergen)
-          );
-          if (validAllergens.length !== filters.allergens.length) {
-            hasChanges = true;
-            console.log('Some allergen filters are no longer valid');
-          }
-          if (validAllergens.length > 0) {
-            validFilters.allergens = validAllergens;
-          }
-        }
+
         
         // Keep other filters that don't depend on facets
         if (filters.sfPreferred !== undefined) {
@@ -227,7 +204,6 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
     warehouses: false,
     accsets: false,
     availability: false,
-    allergens: false,
     priceRanges: false,
   });
 
@@ -319,17 +295,7 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
     });
   };
 
-  const handleAllergenChange = (allergen: string, checked: boolean) => {
-    const currentAllergens = filters.allergens || [];
-    const newAllergens = checked
-      ? [...currentAllergens, allergen]
-      : currentAllergens.filter(a => a !== allergen);
-    
-    onFilterChange({
-      ...filters,
-      allergens: newAllergens.length > 0 ? newAllergens : undefined
-    });
-  };
+
 
   const clearAllFilters = () => {
     onFilterChange({});
@@ -344,8 +310,7 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
       filters.priceRange?.max ||
       filters.warehouse?.length ||
       filters.accset?.length ||
-      filters.availability?.length ||
-      filters.allergens?.length
+      filters.availability?.length
     );
   };
 
@@ -562,31 +527,7 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
         </FilterSection>
       )}
 
-      {/* Allergens Filter */}
-      {activeFacets?.allergens && activeFacets.allergens.length > 0 && (
-        <FilterSection
-          title="Allergens"
-          isExpanded={expandedSections.allergens}
-          onToggle={() => toggleSection('allergens')}
-        >
-          <div className="space-y-2 max-h-48 overflow-y-auto">
-            {activeFacets.allergens.slice(0, 10).map((allergen) => (
-              <label key={allergen.value} className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={filters.allergens?.includes(allergen.value) || false}
-                  onChange={(e) => handleAllergenChange(allergen.value, e.target.checked)}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <span className="ml-2 text-sm text-gray-700 flex-1 truncate">
-                  {allergen.value}
-                </span>
-               
-              </label>
-            ))}
-          </div>
-        </FilterSection>
-      )}
+
 
       {/* Active Filters Summary */}
       {hasActiveFilters() && (
@@ -679,20 +620,7 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
                 </button>
               </span>
             ))}
-            {filters.allergens?.map((allergen) => (
-              <span
-                key={allergen}
-                className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 mr-1 mb-1"
-              >
-                {allergen}
-                <button
-                  onClick={() => handleAllergenChange(allergen, false)}
-                  className="ml-1 text-orange-600 hover:text-orange-800"
-                >
-                  ×
-                </button>
-              </span>
-            ))}
+
           </div>
         </div>
       )}

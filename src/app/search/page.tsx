@@ -95,9 +95,6 @@ function SearchPageContent() {
       if (newFilters.accset?.length) {
         newFilters.accset.forEach(accset => params.append('accset', accset));
       }
-      if (newFilters.allergens?.length) {
-        newFilters.allergens.forEach(allergen => params.append('allergens', allergen));
-      }
       if (newFilters.sfPreferred !== undefined) {
         params.append('sfPreferred', newFilters.sfPreferred.toString());
       }

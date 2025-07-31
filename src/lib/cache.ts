@@ -82,9 +82,8 @@ class SimpleCache {
     sfPreferred?: boolean;
     availability?: string;
     warehouse?: string;
-    accset?: string;
-    allergens?: string;
-    priceMin?: number;
+      accset?: string;
+  priceMin?: number;
     priceMax?: number;
     sortBy?: string;
   }): string {
@@ -99,7 +98,6 @@ class SimpleCache {
       availability: params.availability || '',
       warehouse: params.warehouse || '',
       accset: params.accset || '',
-      allergens: params.allergens || '',
       priceMin: params.priceMin || 0,
       priceMax: params.priceMax || 0,
       sortBy: params.sortBy || ''

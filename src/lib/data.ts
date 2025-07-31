@@ -26,7 +26,6 @@ export interface Product {
   availability: string;
   accset: string;
   keywords: string[];
-  allergens?: string[];
   orderLastMonth?: number;
   isActive: boolean;
   isDeleted: boolean;
@@ -67,7 +66,6 @@ export interface SearchFilters {
   accset?: string[];
   sfPreferred?: boolean;
   warehouse?: string[];
-  allergens?: string[];
   sortBy?: string;
 }
 
@@ -80,7 +78,6 @@ export interface SearchResult {
     warehouses: Array<{ value: string; count: number }>;
     accsets: Array<{ value: string; count: number }>;
     availability: Array<{ value: string; count: number }>;
-    allergens: Array<{ value: string; count: number }>;
   };
   total: number;
   queryTime: number;
@@ -412,12 +409,7 @@ class DataService {
       });
     }
 
-    if (filters.allergens?.length) {
-      filteredProducts = filteredProducts.filter(p => {
-        if (!p.allergens || p.allergens.length === 0) return false;
-        return filters.allergens!.some(allergen => p.allergens!.includes(allergen));
-      });
-    }
+
 
     // Apply sorting (after filtering but before pagination)
     this.applySorting(filteredProducts, sortBy, query);
@@ -443,14 +435,12 @@ class DataService {
     warehouses: Array<{ value: string; count: number }>;
     accsets: Array<{ value: string; count: number }>;
     availability: Array<{ value: string; count: number }>;
-    allergens: Array<{ value: string; count: number }>;
   } {
     const categories = new Map<string, number>();
     const brands = new Map<string, number>();
     const warehouses = new Map<string, number>();
     const accsets = new Map<string, number>();
     const availability = new Map<string, number>();
-    const allergens = new Map<string, number>();
 
     products.forEach(product => {
       // Count categories
@@ -476,12 +466,7 @@ class DataService {
         availability.set(product.availability, (availability.get(product.availability) || 0) + 1);
       }
 
-      // Count allergens
-      if (product.allergens && product.allergens.length > 0) {
-        product.allergens.forEach(allergen => {
-          allergens.set(allergen, (allergens.get(allergen) || 0) + 1);
-        });
-      }
+
 
       // Get warehouse info from stock data
       const stockRecords = this.stocks.filter(s => s.productCode === product.sku);
@@ -512,12 +497,23 @@ class DataService {
       accsets: Array.from(accsets.entries())
         .map(([value, count]) => ({ value, count }))
         .sort((a, b) => b.count - a.count),
-      availability: Array.from(availability.entries())
-        .map(([value, count]) => ({ value, count }))
-        .sort((a, b) => b.count - a.count),
-      allergens: Array.from(allergens.entries())
-        .map(([value, count]) => ({ value, count }))
-        .sort((a, b) => b.count - a.count)
+      availability: (() => {
+        // Ensure standard availability options are always present
+        const standardAvailability = ['IN_STOCK', 'LOW_STOCK', 'OUT_OF_STOCK'];
+        const availabilityFacets = standardAvailability.map(status => ({
+          value: status,
+          count: availability.get(status) || 0
+        }));
+        
+        // Add any other availability statuses that exist in the data
+        availability.forEach((count, status) => {
+          if (!standardAvailability.includes(status)) {
+            availabilityFacets.push({ value: status, count });
+          }
+        });
+        
+        return availabilityFacets.sort((a, b) => b.count - a.count);
+      })()
     };
   }
 

@@ -900,7 +900,12 @@ class VertexAICommerceService {
           // Skip allergens filter - not supported by Vertex AI, will be handled locally
           console.log('🚫 Skipping allergens filter for Vertex AI (not supported):', value);
         } else if (key === 'availability' && value) {
-          filterParts.push(`availability: ANY("${value}")`);
+          if (Array.isArray(value)) {
+            const valueStr = value.map(v => `"${v}"`).join(',');
+            filterParts.push(`availability: ANY(${valueStr})`);
+          } else {
+            filterParts.push(`availability: ANY("${value}")`);
+          }
         } else if (key === 'category' && value) {
           filterParts.push(`categories: ANY("${value}")`);
         } else if (key === 'brand' && value) {
