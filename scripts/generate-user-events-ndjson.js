@@ -17,10 +17,10 @@ const OUTPUT_DEMO_NDJSON = path.join(__dirname, '..', 'demo-user-events.ndjson')
 const NUM_EVENTS = 10000;
 const NUM_VISITORS = 1000;
 const DEMO_USERS = [
-  { id: "tahir", name: "Tahir" },
-  { id: "tahsin", name: "Tahsin" },
-  { id: "pooja", name: "Pooja" },
-  { id: "mahveer", name: "Mahveer" },
+  { id: "tahir", name: "Tahir", visitorId: "160463000" },
+  { id: "tahsin", name: "Tahsin", visitorId: "95375000" },
+  { id: "pooja", name: "Pooja", visitorId: "10000005743" },
+  { id: "mahveer", name: "Mahveer", visitorId: "59092000" },
 ];
 const DEMO_USER_EVENTS = 50000; // Number of demo user events to generate
 const EVENT_TYPES = [
