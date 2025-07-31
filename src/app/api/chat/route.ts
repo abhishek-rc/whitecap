@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
         }
 
         // System prompt for product search assistant
-        const systemPrompt = `You are a helpful shopping assistant for a food distribution company. Your role is to:
+        const systemPrompt = `You are a helpful shopping assistant for a product site. Your role is to:
             1. Help users find products based on their needs
             2. Extract search queries from user messages
             3. Extract specific filters when mentioned (categories, brands, price ranges, etc.)

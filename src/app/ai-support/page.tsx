@@ -132,10 +132,8 @@ export default function AIDrawer() {
   // Dynamic text messages for empty state
   const dynamicMessages = [
     "Start a conversation to find products",
-    "Ask me about fresh ingredients",
     "Looking for something specific?",
     "I can help you discover new products",
-    "Try asking: 'Show me organic vegetables'",
     "What's on your shopping list today?",
     "Need help finding the right products?"
   ];
