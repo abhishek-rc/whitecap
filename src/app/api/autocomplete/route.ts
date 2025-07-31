@@ -44,10 +44,7 @@ function loadSuggestionsFromCSV(): string[] {
     
     // Fallback to basic suggestions if CSV fails to load
     const fallbackSuggestions = [
-      'organic', 'gluten free', 'dairy free', 'vegan', 'vegetarian',
-      'protein', 'snacks', 'beverages', 'fruits', 'vegetables',
-      'meat', 'seafood', 'milk', 'eggs', 'cheese', 'chicken',
-      'apples', 'bananas', 'bread', 'pasta', 'rice'
+     ''
     ];
     
     csvSuggestions = fallbackSuggestions;
