@@ -35,33 +35,66 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // System prompt for product search assistant
-        const systemPrompt = `You are a helpful AI assistant for WhiteCap, a product marketplace. Your primary role is to help users find and discover products, but you should also be helpful and contextual in your responses.
+        // Enhanced system prompt for WhiteCap product search assistant
+        const systemPrompt = `You are an expert AI assistant for WhiteCap, a construction and industrial supply marketplace. Your primary role is to help users find the RIGHT products with precision and context awareness.
 
-            Core responsibilities:
-            1. Help users find products based on their needs
-            2. Extract search queries from user messages when they're looking for products
-            3. Extract specific filters when mentioned (categories, brands, price ranges, etc.)
-            4. Provide helpful product recommendations
-            5. Be conversational, friendly, and contextually aware
+            CORE RESPONSIBILITIES:
+            1. Understand user intent with construction/industrial context
+            2. Generate precise, targeted search queries that avoid irrelevant results
+            3. Handle dimensions, measurements, and technical specifications accurately
+            4. Prioritize specific products over generic keyword matches
+            5. Consider location and availability when relevant
 
-            Response guidelines:
-            - ANALYZE the user's query to understand their intent
-            - If they're asking about products: help them search and find what they need
-            - If they're asking about non-product topics: provide helpful, relevant information while gently guiding them toward how WhiteCap might help
-            - If they're asking about issues/problems: acknowledge their concern and suggest relevant product solutions when appropriate
-            - Be conversational and specific to their request
-            - Be ASSERTIVE and ACTION-ORIENTED - provide direct solutions rather than asking questions
-            - Keep responses concise and focused
-            - NEVER include technical details, search queries, or system information in your response
+            SEARCH QUERY OPTIMIZATION RULES:
 
-            Examples of contextual responses:
-            - Product search: "show me chicken products" → "I'll help you find chicken products for you!"
-            - Problem-solving: "I have a water leak" → "That sounds like a plumbing issue! While I can't provide repair advice, I can help you find plumbing supplies, tools, or emergency repair kits if you need them."
-            - General question: "What's the weather?" → "I don't have access to weather information, but I can help you find weather-related products like umbrellas, rain gear, or outdoor equipment!"
-            - Greeting: "Hello" → "Hi there! I'm here to help you find products on WhiteCap. What are you looking for today?"
+            **Specific Product Priority:**
+            - For "water" queries: Distinguish between specific products (Water Stop, Water Cooler, Water Heater) vs general water-related items
+            - For "bolt" queries: Match exact types (carriage bolt, hex bolt, eye bolt) rather than generic "bolt" searches
+            - For chemical/specialty products: Use exact product names when identifiable
 
-            When you identify a product search intent, extract and return a searchQuery and any applicable filters. For non-product queries, be helpful and contextual without forcing product searches.`;
+            **Dimension & Measurement Handling:**
+            - Convert colloquial measurements: "quarter inch" → "1/4 inch", "three quarter" → "3/4 inch"
+            - Handle fractional formats: "1 quarter" → "1-1/4 inch" or "1.25 inch"
+            - Include common variations: "3/4" AND "0.75" AND "three quarter"
+            - For bolts/screws: Include both fractional and decimal equivalents
+
+            **Construction Context Understanding:**
+            - "lite bolt" likely means "light duty bolt" not "carriage bolt"
+            - "water leak" → prioritize "pipe repair", "sealants", "emergency repair kits"
+            - "hammer" + location → prioritize in-stock hammers at nearby stores
+
+            **Search Query Structure:**
+            - Use specific product names when identifiable
+            - Include measurement variations and synonyms
+            - Add relevant category hints (e.g., "plumbing supplies", "fasteners")
+            - Consider brand preferences and quality levels
+
+            RESPONSE GUIDELINES:
+            - Be direct and solution-focused
+            - Acknowledge the user's specific need
+            - Explain why you're suggesting certain products
+            - Mention when location/availability matters
+            - Keep responses concise but informative
+
+            EXAMPLES:
+            
+            User: "show me water products"
+            Response: "I'll help you find water-related products! Are you looking for specific items like water coolers, water heaters, or plumbing supplies for water systems?"
+            Search: "water cooler OR water heater OR plumbing water supplies"
+
+            User: "I need quarter inch bolts"
+            Response: "I'll find 1/4 inch bolts for you! Let me search for various types and lengths available."
+            Search: "1/4 inch bolt OR 0.25 inch bolt OR quarter inch bolt fasteners"
+
+            User: "water leak in my basement"
+            Response: "That sounds like you need emergency plumbing supplies! I'll help you find pipe repair kits, sealants, and tools to fix water leaks."
+            Search: "pipe repair kit water leak sealant emergency plumbing supplies"
+
+            User: "find me a hammer near my location"
+            Response: "I'll help you find hammers available at your nearest WhiteCap location! Let me search for in-stock hammers."
+            Search: "hammer tools in-stock local availability"
+
+            When generating search queries, prioritize PRECISION over broad matching to reduce irrelevant results.`;
 
         const completion = await openai.chat.completions.create({
             model: 'gpt-4o',
@@ -80,45 +113,13 @@ export async function POST(request: NextRequest) {
             functions: [
                 {
                     name: 'search_products',
-                    description: 'Search for products based on user query with optional filters',
+                    description: 'Search for products based on user query',
                     parameters: {
                         type: 'object',
                         properties: {
                             searchQuery: {
                                 type: 'string',
                                 description: 'The search query to find relevant products'
-                            },
-                            filters: {
-                                type: 'object',
-                                description: 'Optional filters to apply to the search',
-                                properties: {
-                                    category: {
-                                        type: 'array',
-                                        items: { type: 'string' },
-                                        description: 'Product categories (e.g., ["dairy"], ["meat"], ["vegetables"])'
-                                    },
-                                    brand: {
-                                        type: 'array',
-                                        items: { type: 'string' },
-                                        description: 'Brand names to filter by'
-                                    },
-                                    priceRange: {
-                                        type: 'object',
-                                        properties: {
-                                            min: { type: 'number', description: 'Minimum price' },
-                                            max: { type: 'number', description: 'Maximum price' }
-                                        }
-                                    },
-                                    sfPreferred: {
-                                        type: 'boolean',
-                                        description: 'Filter for SF preferred products'
-                                    },
-                                    allergens: {
-                                        type: 'array',
-                                        items: { type: 'string' },
-                                        description: 'Allergen filters (e.g., ["gluten-free"], ["dairy-free"])'
-                                    }
-                                }
                             }
                         },
                         required: ['searchQuery']
@@ -130,7 +131,6 @@ export async function POST(request: NextRequest) {
 
         const assistantMessage = completion.choices[0].message;
         let searchQuery = null;
-        let filters: SearchFilters = {};
 
         console.log('OpenAI Response:', assistantMessage);
 
@@ -139,15 +139,13 @@ export async function POST(request: NextRequest) {
             try {
                 const functionArgs = JSON.parse(assistantMessage.function_call.arguments || '{}');
                 searchQuery = functionArgs.searchQuery;
-                filters = functionArgs.filters || {};
                 console.log('Function call search query:', searchQuery);
-                console.log('Function call filters:', filters);
             } catch (error) {
                 console.error('Error parsing function arguments:', error);
             }
         }
 
-        // Enhanced fallback: extract search terms and basic filters from user input directly
+        // Enhanced fallback: extract search terms from user input directly
         if (!searchQuery) {
             const userInput = message.toLowerCase();
             
@@ -177,7 +175,7 @@ export async function POST(request: NextRequest) {
                 const questionWords = ['how', 'what', 'when', 'where', 'why', 'who', 'can you', 'could you', 'would you', 'hello', 'hi', 'hey', 'thanks', 'thank you'];
                 const isQuestion = questionWords.some(word => userInput.includes(word));
                 const isShort = userInput.trim().split(' ').length <= 4; // Increased to 4 words or less
-                const hasProductKeywords = /\b(cheese|sandwich|bread|milk|meat|chicken|beef|fish|fruit|vegetable|snack|drink|beverage|food|organic|fresh|pizza|pasta|rice|egg|butter|yogurt|cereal|soup|sauce|spice|herb|oil|vinegar|sugar|flour|salt|pepper|tea|coffee|juice|water|soda|wine|beer)\b/.test(userInput);
+                const hasProductKeywords = /\b(electronics|clothing|home|books|toys|sports|beauty|health|automotive|garden|pet|baby|office|jewelry|shoes|accessories)\b/.test(userInput);
                 
                 console.log('Fallback analysis:', {
                     userInput,
@@ -192,45 +190,6 @@ export async function POST(request: NextRequest) {
                     searchQuery = userInput.trim();
                     console.log('Fallback search query:', searchQuery);
                 }
-            }
-            
-            // Extract basic filters from common phrases
-            if (userInput.includes('organic')) {
-                if (!filters?.category) filters.category = [];
-                if (!filters.category.includes('organic')) filters.category.push('organic');
-            }
-            
-            // Price range extraction
-            const priceMatch = userInput.match(/under \$?(\d+)/i) || userInput.match(/below \$?(\d+)/i) || userInput.match(/less than \$?(\d+)/i);
-            if (priceMatch) {
-                filters.priceRange = { max: parseInt(priceMatch[1]) };
-            }
-            
-            const priceRangeMatch = userInput.match(/between \$?(\d+) and \$?(\d+)/i) || userInput.match(/from \$?(\d+) to \$?(\d+)/i);
-            if (priceRangeMatch) {
-                filters.priceRange = { 
-                    min: parseInt(priceRangeMatch[1]), 
-                    max: parseInt(priceRangeMatch[2]) 
-                };
-            }
-            
-            // Category extraction
-            const categories = ['dairy', 'meat', 'vegetables', 'fruits', 'beverages', 'snacks', 'frozen', 'bakery', 'seafood', 'poultry', 'chicken', 'beef', 'pork'];
-            for (const category of categories) {
-                if (userInput.includes(category)) {
-                    if (!filters.category) filters.category = [];
-                    if (!filters.category.includes(category)) filters.category.push(category);
-                }
-            }
-            
-            // Allergen-free extraction
-            if (userInput.includes('gluten-free') || userInput.includes('gluten free')) {
-                if (!filters.allergens) filters.allergens = [];
-                if (!filters.allergens.includes('gluten-free')) filters.allergens.push('gluten-free');
-            }
-            if (userInput.includes('dairy-free') || userInput.includes('dairy free')) {
-                if (!filters.allergens) filters.allergens = [];
-                if (!filters.allergens.includes('dairy-free')) filters.allergens.push('dairy-free');
             }
         }
 
@@ -248,8 +207,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
             success: true,
             message: responseMessage,
-            searchQuery,
-            filters
+            searchQuery
         });
 
     } catch (error) {
