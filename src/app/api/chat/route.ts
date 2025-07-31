@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
             Always respond in a helpful, friendly tone but keep it focused on their specific request. When you identify a product search intent, always extract and return a searchQuery and any applicable filters.`;
 
         const completion = await openai.chat.completions.create({
-            model: 'gpt-3.5-turbo',
+            model: 'gpt-4o',
             messages: [
                 {
                     role: 'system',
