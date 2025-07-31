@@ -79,7 +79,7 @@ class SimpleCache {
     limit: number;
     category?: string;
     brand?: string;
-    sfPreferred?: boolean;
+  
     availability?: string;
     warehouse?: string;
       accset?: string;
@@ -94,7 +94,7 @@ class SimpleCache {
       limit: params.limit,
       category: params.category || '',
       brand: params.brand || '',
-      sfPreferred: params.sfPreferred || false,
+  
       availability: params.availability || '',
       warehouse: params.warehouse || '',
       accset: params.accset || '',

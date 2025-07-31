@@ -167,12 +167,7 @@ export default function AIDrawer() {
       if (filters.accset?.length) {
         filters.accset.forEach(accset => params.append('accset', accset));
       }
-      if (filters.allergens?.length) {
-        filters.allergens.forEach(allergen => params.append('allergens', allergen));
-      }
-      if (filters.sfPreferred !== undefined) {
-        params.append('sfPreferred', filters.sfPreferred.toString());
-      }
+
       if (filters.priceRange?.min !== undefined) {
         params.append('priceMin', filters.priceRange.min.toString());
       }

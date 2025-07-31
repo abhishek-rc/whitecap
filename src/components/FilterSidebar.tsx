@@ -178,9 +178,6 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
 
         
         // Keep other filters that don't depend on facets
-        if (filters.sfPreferred !== undefined) {
-          validFilters.sfPreferred = filters.sfPreferred;
-        }
         if (filters.priceRange) {
           validFilters.priceRange = filters.priceRange;
         }
@@ -238,12 +235,7 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
     });
   };
 
-  const handleSFPreferredChange = (checked: boolean) => {
-    onFilterChange({
-      ...filters,
-      sfPreferred: checked ? true : undefined
-    });
-  };
+
 
   const handlePriceRangeChange = (min: number, max: number, checked: boolean) => {
     if (checked) {
@@ -305,7 +297,7 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
     return !!(
       filters.category?.length ||
       filters.brand?.length ||
-      filters.sfPreferred ||
+
       filters.priceRange?.min ||
       filters.priceRange?.max ||
       filters.warehouse?.length ||
@@ -359,22 +351,7 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
         )}
       </div>
 
-      {/* SF Preferred Filter */}
-      <FilterSection
-        title="Product Type"
-        isExpanded={expandedSections.sfPreferred}
-        onToggle={() => toggleSection('sfPreferred')}
-      >
-        <label className="flex items-center">
-          <input
-            type="checkbox"
-            checked={filters.sfPreferred || false}
-            onChange={(e) => handleSFPreferredChange(e.target.checked)}
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-          />
-          <span className="ml-2 text-sm text-gray-700">SF Preferred Only</span>
-        </label>
-      </FilterSection>
+
 
       {/* Categories Filter */}
       {activeFacets?.categories && activeFacets.categories.length > 0 && (
@@ -534,11 +511,7 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
         <div className="mt-4 pt-4 border-t border-gray-200">
           <h4 className="text-sm font-medium text-gray-900 mb-2">Active Filters</h4>
           <div className="space-y-1">
-            {filters.sfPreferred && (
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                SF Preferred
-              </span>
-            )}
+
             {filters.priceRange && (
               <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 mr-1 mb-1">
                 ${filters.priceRange.min} - ${filters.priceRange.max}
