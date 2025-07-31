@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20');
     const category = searchParams.get('category') || '';
     const brand = searchParams.get('brand') || '';
-    const sfPreferred = searchParams.get('sfPreferred') === 'true';
+  
     const availability = searchParams.get('availability') || '';
     const sortBy = searchParams.get('sortBy') || '';
     const visitorId = searchParams.get('visitorId') || 'anonymous-user';
@@ -23,7 +23,6 @@ export async function GET(request: NextRequest) {
       limit,
       category,
       brand,
-      sfPreferred,
       availability,
       sortBy
     });
@@ -39,7 +38,7 @@ export async function GET(request: NextRequest) {
     const filters: Record<string, unknown> = {};
     if (category) filters.category = category;
     if (brand) filters.brand = brand;
-    if (sfPreferred) filters.sfPreferred = true;
+
     if (availability) filters.availability = availability;
 
     // **PRIMARY STRATEGY: Fast Local Search**

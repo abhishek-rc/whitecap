@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
   const limit = parseInt(searchParams.get('limit') || '20');
   const categories = searchParams.getAll('category');
   const brands = searchParams.getAll('brand');
-  const sfPreferred = searchParams.get('sfPreferred') === 'true';
+
   const availabilities = searchParams.getAll('availability');
   const warehouses = searchParams.getAll('warehouse');
   const accsets = searchParams.getAll('accset');
@@ -32,7 +32,6 @@ export async function GET(request: NextRequest) {
       limit,
       category: categories.join(','),
       brand: brands.join(','),
-      sfPreferred,
       availability: availabilities.join(','),
       warehouse: warehouses.join(','),
       accset: accsets.join(','),
@@ -57,7 +56,7 @@ export async function GET(request: NextRequest) {
     const filters: Record<string, unknown> = {};
     if (categories.length > 0) filters.category = categories;
     if (brands.length > 0) filters.brand = brands;
-    if (sfPreferred) filters.sfPreferred = true;
+
     if (availabilities.length > 0) filters.availability = availabilities;
     if (warehouses.length > 0) filters.warehouse = warehouses;
     if (accsets.length > 0) filters.accset = accsets;
@@ -479,7 +478,7 @@ export async function GET(request: NextRequest) {
           limit,
           category: categories.join(','),
           brand: brands.join(','),
-          sfPreferred,
+    
           availability: availabilities.join(','),
           sortBy,
           visitorId
@@ -502,7 +501,7 @@ export async function GET(request: NextRequest) {
         const localFilters: any = {};
         if (categories.length > 0) localFilters.category = categories;
         if (brands.length > 0) localFilters.brand = brands;
-        if (sfPreferred) localFilters.sfPreferred = true;
+    
         if (availabilities.length > 0) localFilters.availability = availabilities;
         if (warehouses.length > 0) localFilters.warehouse = warehouses;
         if (accsets.length > 0) localFilters.accset = accsets;
@@ -631,7 +630,7 @@ export async function GET(request: NextRequest) {
         limit,
         category: categories.join(','),
         brand: brands.join(','),
-        sfPreferred,
+  
         availability: availabilities.join(','),
         sortBy,
         visitorId

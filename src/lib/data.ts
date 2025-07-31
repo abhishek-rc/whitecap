@@ -40,6 +40,7 @@ export interface Product {
    * Optional: available quantity for this product (for low stock warnings in UI)
    */
   stock?: number;
+  allergens?: string[];
 }
 
 export interface Stock {
@@ -53,6 +54,7 @@ export interface Stock {
   standardCost: number;
   costUnit: string;
   isActive: boolean;
+  allergens?: string[];
 }
 
 export interface SearchFilters {
@@ -64,7 +66,6 @@ export interface SearchFilters {
   };
   availability?: string[];
   accset?: string[];
-  sfPreferred?: boolean;
   warehouse?: string[];
   sortBy?: string;
 }
@@ -78,6 +79,7 @@ export interface SearchResult {
     warehouses: Array<{ value: string; count: number }>;
     accsets: Array<{ value: string; count: number }>;
     availability: Array<{ value: string; count: number }>;
+    allergens: Array<{ value: string; count: number }>;
   };
   total: number;
   queryTime: number;
@@ -386,9 +388,7 @@ class DataService {
       );
     }
 
-    if (filters.sfPreferred) {
-      filteredProducts = filteredProducts.filter(p => p.isSFPreferred);
-    }
+
 
     if (filters.availability?.length) {
       filteredProducts = filteredProducts.filter(p => 
@@ -435,6 +435,7 @@ class DataService {
     warehouses: Array<{ value: string; count: number }>;
     accsets: Array<{ value: string; count: number }>;
     availability: Array<{ value: string; count: number }>;
+    allergens: Array<{ value: string; count: number }>;
   } {
     const categories = new Map<string, number>();
     const brands = new Map<string, number>();
@@ -513,7 +514,8 @@ class DataService {
         });
         
         return availabilityFacets.sort((a, b) => b.count - a.count);
-      })()
+      })(),
+      allergens: []
     };
   }
 

@@ -15,7 +15,6 @@ interface SearchFilters {
         max?: number;
     };
     allergens?: string[];
-    sfPreferred?: boolean;
 }
 
 export async function POST(request: NextRequest) {

@@ -95,12 +95,16 @@ function SearchPageContent() {
       if (newFilters.brand?.length) {
         newFilters.brand.forEach(brand => params.append('brand', brand));
       }
+      if (newFilters.availability?.length) {
+        newFilters.availability.forEach(avail => params.append('availability', avail));
+      }
+      if (newFilters.warehouse?.length) {
+        newFilters.warehouse.forEach(warehouse => params.append('warehouse', warehouse));
+      }
       if (newFilters.accset?.length) {
         newFilters.accset.forEach(accset => params.append('accset', accset));
       }
-      if (newFilters.sfPreferred !== undefined) {
-        params.append('sfPreferred', newFilters.sfPreferred.toString());
-      }
+
       if (newFilters.priceRange?.min !== undefined) {
         params.append('priceMin', newFilters.priceRange.min.toString());
       }
@@ -455,7 +459,7 @@ function SearchPageContent() {
               <div className="mt-8">
                 <RecommendationsWidget
                   categories={filters.category}
-                  userPreferences={{ sfPreferred: filters.sfPreferred }}
+                  userPreferences={{}}
                   limit={12}
                   visitorId={getCurrentVisitorId(selectedUserId)}
                   userId={selectedUserId || undefined}
