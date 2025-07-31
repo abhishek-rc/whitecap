@@ -42,9 +42,6 @@ yarn-error.log*
 !vercel.json
 !tsconfig.json
 
-# CSV data files - include these for deployment
-!*.csv
-
 # vercel
 .vercel
 
@@ -55,10 +52,8 @@ next-env.d.ts
 .vercel
 
 *.xlsx
-*.csv
 *.pdf
 *.docx
 *.doc
 *.xls
 *.xlsx
-*.csv

@@ -5,9 +5,9 @@ import { getOrCreateVisitorId } from '@/lib/visitorId';
 
 interface Suggestion {
   text: string;
-  type: 'sku' | 'product' | 'brand' | 'category';
-  score: number;
-  metadata: {
+  type: 'query' | 'sku' | 'product' | 'brand' | 'category';
+  score?: number;
+  metadata?: {
     displayName?: string;
     [key: string]: unknown;
   };
@@ -72,16 +72,11 @@ export default function SearchBar({ onSearch, initialQuery = '' }: SearchBarProp
     }
   };
 
-  // We no longer fetch suggestions on every query change
-  // Instead, suggestions are fetched only when Enter is pressed
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Fetch suggestions when form is submitted
-    fetchSuggestions(query);
     // Allow empty string searches to return all products
     onSearch(query.trim());
-    setShowSuggestions(true);
+    setShowSuggestions(false);
   };
 
   const handleSuggestionClick = (suggestion: Suggestion) => {
@@ -97,10 +92,6 @@ export default function SearchBar({ onSearch, initialQuery = '' }: SearchBarProp
       if (showSuggestions && suggestions.length > 0 && selectedIndex >= 0) {
         e.preventDefault();
         handleSuggestionClick(suggestions[selectedIndex]);
-      } else {
-        // If Enter is pressed without selecting a suggestion, fetch suggestions
-        fetchSuggestions(query);
-        setShowSuggestions(true);
       }
       return;
     }
@@ -127,6 +118,12 @@ export default function SearchBar({ onSearch, initialQuery = '' }: SearchBarProp
 
   const getSuggestionIcon = (type: string) => {
     switch (type) {
+      case 'query':
+        return (
+          <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        );
       case 'sku':
         return (
           <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -174,12 +171,7 @@ export default function SearchBar({ onSearch, initialQuery = '' }: SearchBarProp
             type="text"
             value={query}
             onChange={(e) => {
-              // Only update the query text, don't trigger search
               setQuery(e.target.value);
-              // Clear suggestions when typing to ensure they only appear on Enter
-              if (showSuggestions) {
-                setShowSuggestions(false);
-              }
             }}
             onKeyDown={handleKeyDown}
             onFocus={() => query && setShowSuggestions(true)}
@@ -222,8 +214,8 @@ export default function SearchBar({ onSearch, initialQuery = '' }: SearchBarProp
                 <div className="text-sm font-medium text-gray-900 truncate">
                   {suggestion.text}
                 </div>
+                {/* Remove suggestion.type display for cleaner UI */}
                 <div className="text-xs text-gray-500 capitalize">
-                  {suggestion.type}
                   {suggestion.metadata?.displayName && suggestion.type === 'sku' && (
                     <span> • {suggestion.metadata.displayName}</span>
                   )}

@@ -50,10 +50,7 @@ function SearchPageContent() {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState('relevance');
   
-  // Autocomplete state
-  const [suggestions, setSuggestions] = useState<any[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
+
 
   const itemsPerPage = 20;
 
@@ -77,41 +74,7 @@ function SearchPageContent() {
     setStoredDemoUserId(selectedUserId);
   }, [selectedUserId]);
 
-  // Debounced autocomplete on keystroke
-  useEffect(() => {
-    if (!searchQuery.trim() || searchQuery.length < 2) {
-      setSuggestions([]);
-      setShowSuggestions(false);
-      return;
-    }
 
-    const timeoutId = setTimeout(() => {
-      fetchSuggestions(searchQuery);
-    }, 300); // 300ms debounce
-
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery]);
-
-  const fetchSuggestions = async (searchQuery: string) => {
-    if (!searchQuery.trim()) {
-      setSuggestions([]);
-      setShowSuggestions(false);
-      return;
-    }
-
-    try {
-      const visitorId = getCurrentVisitorId(selectedUserId);
-      const response = await fetch(`/api/autocomplete?q=${encodeURIComponent(searchQuery)}&limit=8&visitorId=${encodeURIComponent(visitorId)}`);
-      const data = await response.json();
-      if (Array.isArray(data.suggestions)) {
-        setSuggestions(data.suggestions);
-        setShowSuggestions(true);
-        setSelectedSuggestionIndex(-1);
-      }
-    } catch (error) {
-      console.error('Autocomplete error:', error);
-    }
-  };
 
   const performSearch = useCallback(async (query: string, newFilters: SearchFilters = {}, page: number = 1, sort: string = 'relevance') => {
     console.log('🔍 Performing search with query:', query, 'filters:', newFilters, 'page:', page, 'sort:', sort);
@@ -219,23 +182,11 @@ function SearchPageContent() {
               </Link>
             </div>
             <div className="flex items-center space-x-4 lg:space-x-6">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search by name, brand, product id..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery((e.target as HTMLInputElement).value)}
-                  className="w-48 text-white sm:w-64 lg:w-100 pl-3 pr-12 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 text-gray-800"
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearch((e.target as HTMLInputElement).value)}
+              <div className="w-48 sm:w-64 lg:w-80">
+                <SearchBar 
+                  onSearch={handleSearch}
+                  initialQuery={searchQuery}
                 />
-                <button
-                  className="absolute inset-y-0 right-0 px-3 bg-yellow-500 rounded-r-md flex items-center justify-center hover:bg-yellow-600 transition-colors"
-                  onClick={() => handleSearch(searchQuery)}
-                >
-                  <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </button>
               </div>
               <Link href="/ai-support" className="ml-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center space-x-2">
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -338,23 +289,11 @@ function SearchPageContent() {
             {/* Mobile Menu - Hidden by default */}
             <div id="mobile-menu" className="hidden pt-4 pb-2">
               {/* Mobile Search */}
-              <div className="relative mb-4">
-                <input
-                  type="text"
-                  placeholder="Search products..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery((e.target as HTMLInputElement).value)}
-                  className="w-full pl-3 pr-12 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 text-gray-800"
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearch((e.target as HTMLInputElement).value)}
+              <div className="mb-4">
+                <SearchBar 
+                  onSearch={handleSearch}
+                  initialQuery={searchQuery}
                 />
-                <button
-                  className="absolute inset-y-0 right-0 px-3 bg-yellow-500 rounded-r-md flex items-center justify-center hover:bg-yellow-600 transition-colors"
-                  onClick={() => handleSearch(searchQuery)}
-                >
-                  <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </button>
               </div>
 
               {/* Mobile Menu Items */}
