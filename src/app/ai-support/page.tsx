@@ -588,7 +588,7 @@ export default function AIDrawer() {
                   // Create a pattern for different card sizes
                   const cardType: 'small' | 'tall' | 'wide' = 'small';
 
-                  // Example pattern - you can customize this logic
+                  // // Example pattern - you can customize this logic
                   // if (index % 8 === 2 || index % 8 === 5) {
                   //   cardType = 'tall'; // Every 3rd and 6th card in each set of 8
                   // } else if (index % 12 === 7) {
