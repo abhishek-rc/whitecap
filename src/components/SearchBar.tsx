@@ -57,29 +57,39 @@ export default function SearchBar({ onSearch, initialQuery = '' }: SearchBarProp
     }
   };
 
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      fetchSuggestions(query);
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [query]);
+  // We no longer fetch suggestions on every query change
+  // Instead, suggestions are fetched only when Enter is pressed
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Fetch suggestions when form is submitted
+    fetchSuggestions(query);
     // Allow empty string searches to return all products
     onSearch(query.trim());
-    setShowSuggestions(false);
+    setShowSuggestions(true);
   };
 
   const handleSuggestionClick = (suggestion: Suggestion) => {
     setQuery(suggestion.text);
+    // Only search when a suggestion is clicked
     onSearch(suggestion.text);
     setShowSuggestions(false);
     inputRef.current?.focus();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      if (showSuggestions && suggestions.length > 0 && selectedIndex >= 0) {
+        e.preventDefault();
+        handleSuggestionClick(suggestions[selectedIndex]);
+      } else {
+        // If Enter is pressed without selecting a suggestion, fetch suggestions
+        fetchSuggestions(query);
+        setShowSuggestions(true);
+      }
+      return;
+    }
+
     if (!showSuggestions || suggestions.length === 0) return;
 
     switch (e.key) {
@@ -92,12 +102,6 @@ export default function SearchBar({ onSearch, initialQuery = '' }: SearchBarProp
       case 'ArrowUp':
         e.preventDefault();
         setSelectedIndex(prev => prev > 0 ? prev - 1 : -1);
-        break;
-      case 'Enter':
-        if (selectedIndex >= 0) {
-          e.preventDefault();
-          handleSuggestionClick(suggestions[selectedIndex]);
-        }
         break;
       case 'Escape':
         setShowSuggestions(false);
@@ -154,7 +158,14 @@ export default function SearchBar({ onSearch, initialQuery = '' }: SearchBarProp
             ref={inputRef}
             type="text"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              // Only update the query text, don't trigger search
+              setQuery(e.target.value);
+              // Clear suggestions when typing to ensure they only appear on Enter
+              if (showSuggestions) {
+                setShowSuggestions(false);
+              }
+            }}
             onKeyDown={handleKeyDown}
             onFocus={() => query && setShowSuggestions(true)}
             onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}

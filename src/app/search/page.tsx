@@ -42,6 +42,7 @@ function SearchPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
+  const [displayedSearchQuery, setDisplayedSearchQuery] = useState('');
   const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState<SearchFilters>({});
@@ -137,6 +138,7 @@ function SearchPageContent() {
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
+    setDisplayedSearchQuery(query);
     setCurrentPage(1);
     performSearch(query, filters, 1, sortBy);
   };
@@ -158,10 +160,10 @@ function SearchPageContent() {
     performSearch(searchQuery, filters, 1, newSortBy);
   };
 
-  // Run search when params change
+  // Run search when filters, page, or sort change (but not searchQuery)
   useEffect(() => {
     performSearch(searchQuery, filters, currentPage, sortBy);
-  }, [searchQuery, filters, performSearch, currentPage, sortBy]);
+  }, [filters, performSearch, currentPage, sortBy]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -400,7 +402,7 @@ function SearchPageContent() {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-lg font-medium text-gray-900">
-                  {searchQuery ? `Search Results for "${searchQuery}"` : 'All Products'}
+                  {displayedSearchQuery ? `Search Results for "${displayedSearchQuery}"` : 'All Products'}
                 </h2>
                 {searchResult && (
                   <p className="text-sm text-gray-600 mt-1">
