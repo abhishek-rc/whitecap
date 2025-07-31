@@ -52,10 +52,8 @@ next-env.d.ts
 .vercel
 
 *.xlsx
-*.csv
 *.pdf
 *.docx
 *.doc
 *.xls
 *.xlsx
-*.csv
