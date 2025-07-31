@@ -353,8 +353,8 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
 
 
 
-      {/* Categories Filter */}
-      {activeFacets?.categories && activeFacets.categories.length > 0 && (
+      {/* Categories Filter - Hidden */}
+      {false && activeFacets?.categories && activeFacets.categories.length > 0 && (
         <FilterSection
           title="Categories"
           isExpanded={expandedSections.categories}
@@ -429,8 +429,8 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
         </FilterSection>
       )}
 
-      {/* Warehouses Filter */}
-      {activeFacets?.warehouses && activeFacets.warehouses.length > 0 && (
+      {/* Warehouses Filter - Hidden */}
+      {false && activeFacets?.warehouses && activeFacets.warehouses.length > 0 && (
         <FilterSection
           title="Warehouses"
           isExpanded={expandedSections.warehouses}
@@ -523,7 +523,8 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
                 </button>
               </span>
             )}
-            {filters.category?.map((category) => (
+            {/* Category filter tags - Hidden */}
+            {false && filters.category?.map((category) => (
               <span
                 key={category}
                 className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 mr-1 mb-1"
@@ -551,7 +552,8 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
                 </button>
               </span>
             ))}
-            {filters.warehouse?.map((warehouse) => (
+            {/* Warehouse filter tags - Hidden */}
+            {false && filters.warehouse?.map((warehouse) => (
               <span
                 key={warehouse}
                 className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 mr-1 mb-1"

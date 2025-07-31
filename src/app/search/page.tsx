@@ -164,10 +164,12 @@ function SearchPageContent() {
     performSearch(searchQuery, filters, 1, newSortBy);
   };
 
-  // Run search when filters, page, or sort change (but not searchQuery)
+  // Run search when filters or page change (sort and searchQuery are handled by their respective handlers)
   useEffect(() => {
-    performSearch(searchQuery, filters, currentPage, sortBy);
-  }, [filters, performSearch, currentPage, sortBy]);
+    if (searchQuery) { // Only auto-search if there's a query
+      performSearch(searchQuery, filters, currentPage, sortBy);
+    }
+  }, [filters, performSearch, currentPage]);
 
   return (
     <div className="min-h-screen bg-gray-50">
