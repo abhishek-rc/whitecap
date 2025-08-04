@@ -383,27 +383,27 @@ export default function Home() {
       </nav>
 
       {/* Main Promotional Banner */}
-      <section className="relative bg-yellow-500 overflow-hidden">
+      <section className="relative bg-gray-800 overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <div className="relative h-64 md:h-80 flex items-center">
             <div className="absolute inset-0 z-0">
               <img
-                src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80"
-                alt="Food Service Banner"
+                src="https://images.unsplash.com/photo-1541888946425-d81bb19240f5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80"
+                alt="Construction Site Banner"
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-r from-yellow-500 via-yellow-500/80 to-transparent"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-gray-900 via-gray-900/80 to-transparent"></div>
             </div>
             <div className="relative z-10 px-4 sm:px-6 lg:px-8 max-w-2xl">
-              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Premium Food Products</h2>
-              <p className="text-xl text-gray-800 mb-6">Quality ingredients for professional kitchens</p>
+              <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">Professional Construction Supplies</h2>
+              <p className="text-xl text-gray-200 mb-6">Concrete accessories, tools, building materials & safety products for contractors</p>
               <a
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
                   handleSearchQuery('');
                 }}
-                className="inline-block bg-yellow-600 hover:bg-yellow-700 text-white font-medium px-8 py-3 rounded-md transition-colors duration-200"
+                className="inline-block bg-orange-600 hover:bg-orange-700 text-white font-medium px-8 py-3 rounded-md transition-colors duration-200"
               >
                 SHOP NOW
                 <svg className="inline-block ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
