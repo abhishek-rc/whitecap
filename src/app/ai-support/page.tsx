@@ -76,11 +76,20 @@ export default function AIDrawer() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [recommendations, setRecommendations] = useState<RecommendationsData | null>(null);
+  // Add state for chat session ID
+  const [sessionId, setSessionId] = useState<string | null>(null);
 
   // On mount, load selected user from localStorage
   useEffect(() => {
     const stored = getStoredDemoUserId();
     if (stored) setSelectedUserId(stored);
+    
+    // Load existing session ID from sessionStorage if available
+    const storedSessionId = sessionStorage.getItem('chatSessionId');
+    if (storedSessionId) {
+      setSessionId(storedSessionId);
+      console.log('Restored chat session ID:', storedSessionId);
+    }
   }, []);
 
   useEffect(() => {
@@ -207,7 +216,7 @@ export default function AIDrawer() {
     setIsTyping(true);
 
     try {
-      // Call OpenAI API (you'll need to implement this endpoint)
+      // Call OpenAI API with session ID if available
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -215,7 +224,8 @@ export default function AIDrawer() {
         },
         body: JSON.stringify({
           message: inputMessage,
-          context: 'product_search'
+          context: 'product_search',
+          sessionId: sessionId
         }),
       });
 
@@ -234,6 +244,13 @@ export default function AIDrawer() {
         console.log("AI Response data:", data);
         console.log("Search Query:", data.searchQuery);
         console.log("Filters:", data.filters);
+        
+        // Store the session ID received from the server
+        if (data.sessionId) {
+          console.log("Setting chat session ID:", data.sessionId);
+          setSessionId(data.sessionId);
+          sessionStorage.setItem('chatSessionId', data.sessionId);
+        }
 
         // If the AI response includes a search query, update the internal AI search state with filters
         if (data.searchQuery) {
