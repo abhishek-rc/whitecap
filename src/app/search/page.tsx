@@ -49,6 +49,7 @@ function SearchPageContent() {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState('relevance');
+  const [isInitialized, setIsInitialized] = useState(false);
   
 
 
@@ -64,10 +65,16 @@ function SearchPageContent() {
     const userId = searchParams.get('userId');
 
     if (userId) setSelectedUserId(userId);
-    if (query) setSearchQuery(query);
+    if (query) {
+      setSearchQuery(query);
+      setDisplayedSearchQuery(query);
+    }
     if (category) {
       setFilters(prev => ({ ...prev, category: [category] }));
     }
+    
+    // Mark initialization as complete
+    setIsInitialized(true);
   }, [searchParams]);
 
   useEffect(() => {
@@ -164,9 +171,18 @@ function SearchPageContent() {
     performSearch(searchQuery, filters, 1, newSortBy);
   };
 
+  // Trigger initial search when page loads and initialization is complete
+  useEffect(() => {
+    if (isInitialized) {
+      // Perform initial search on page load (shows all products if no query, or filtered results)
+      performSearch(searchQuery, filters, 1, sortBy);
+    }
+  }, [isInitialized, performSearch, searchQuery, filters, sortBy]);
+
   // Run search when filters or page change (sort and searchQuery are handled by their respective handlers)
   useEffect(() => {
-    if (searchQuery) { // Only auto-search if there's a query
+    // Only auto-search on filter/page changes after initial load is complete and we have search results
+    if (isInitialized && searchResult !== null) {
       performSearch(searchQuery, filters, currentPage, sortBy);
     }
   }, [filters, performSearch, currentPage]);
