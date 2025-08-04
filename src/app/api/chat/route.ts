@@ -6,20 +6,12 @@ const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
 });
 
-// Define the SearchFilters interface
-interface SearchFilters {
-    category?: string[];
-    brand?: string[];
-    priceRange?: {
-        min?: number;
-        max?: number;
-    };
-    allergens?: string[];
-}
+// In-memory session store for conversation history
+const sessionStore: Record<string, { messages: Array<{ role: string; content: string }> }> = {};
 
 export async function POST(request: NextRequest) {
     try {
-        const { message } = await request.json();
+        const { message, sessionId } = await request.json();
 
         if (!message) {
             return NextResponse.json(
@@ -33,6 +25,14 @@ export async function POST(request: NextRequest) {
                 { success: false, error: 'OpenAI API key not configured' },
                 { status: 500 }
             );
+        }
+
+        // Generate a new session ID if one wasn't provided
+        const currentSessionId = sessionId || `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+        
+        // Initialize session if it doesn't exist
+        if (!sessionStore[currentSessionId]) {
+            sessionStore[currentSessionId] = { messages: [] };
         }
 
         // Enhanced system prompt for WhiteCap product search assistant
@@ -96,18 +96,27 @@ export async function POST(request: NextRequest) {
 
             When generating search queries, prioritize PRECISION over broad matching to reduce irrelevant results.`;
 
+        // Get conversation history from session
+        const conversationHistory = sessionStore[currentSessionId].messages;
+        
+        // Add user message to conversation history
+        conversationHistory.push({ role: 'user', content: message });
+
+        // Create a properly typed messages array
+        const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
+            {
+                role: 'system',
+                content: systemPrompt
+            },
+            ...conversationHistory.map(msg => ({
+                role: msg.role as 'user' | 'assistant' | 'system',
+                content: msg.content
+            }))
+        ];
+
         const completion = await openai.chat.completions.create({
             model: 'gpt-4o',
-            messages: [
-                {
-                    role: 'system',
-                    content: systemPrompt
-                },
-                {
-                    role: 'user',
-                    content: message
-                }
-            ],
+            messages: messages,
             max_tokens: 300,
             temperature: 0.7,
             functions: [
@@ -133,6 +142,15 @@ export async function POST(request: NextRequest) {
         let searchQuery = null;
 
         console.log('OpenAI Response:', assistantMessage);
+
+        // Add assistant response to conversation history
+        conversationHistory.push({ 
+            role: 'assistant', 
+            content: assistantMessage.content || '' 
+        });
+        
+        // Save updated conversation history to session
+        sessionStore[currentSessionId].messages = conversationHistory;
 
         // Check if the AI wants to call the search function
         if (assistantMessage.function_call) {
@@ -207,7 +225,8 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
             success: true,
             message: responseMessage,
-            searchQuery
+            searchQuery,
+            sessionId: currentSessionId
         });
 
     } catch (error) {
