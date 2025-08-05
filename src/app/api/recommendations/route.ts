@@ -261,7 +261,7 @@ async function processRecommendations(request: NextRequest) {
     // Record user event for analytics (non-blocking, fire-and-forget)
     Promise.resolve().then(() => {
       vertexAICommerceService.writeUserEvent({
-        eventType: 'recommendation-view',
+        eventType: 'detail-page-view',
         visitorId,
         eventTime: new Date().toISOString(),
         productDetails: sku ? [{
