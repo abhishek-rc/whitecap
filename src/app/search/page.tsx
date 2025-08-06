@@ -190,8 +190,8 @@ function SearchPageContent() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-black border-b border-gray-800 text-white py-4">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <header className="bg-black border-b border-gray-800 text-white py-8">
+        <div className="max-w-7xl mx-auto">
           {/* Desktop Header */}
           <div className="hidden md:flex justify-between items-center">
             <div className="flex items-center">
@@ -199,19 +199,14 @@ function SearchPageContent() {
                 <img src="https://d2ou5j4j4yi9kl.cloudfront.net/userfiles/header/whitecap_header_logo.png" alt="WhiteCap Logo" className="h-10" />
               </Link>
             </div>
-            <div className="flex items-center space-x-4 lg:space-x-6">
-              <div className="w-48 sm:w-64 lg:w-80">
+            <div className="flex items-center flex-1 space-x-4 lg:space-x-6">
+              <div className="w-48 sm:w-64 lg:w-80 flex-1 ml-4">
                 <SearchBar 
                   onSearch={handleSearch}
                   initialQuery={searchQuery}
                 />
               </div>
-              <Link href="/ai-support" className="ml-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center space-x-2">
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
-                <span className="hidden sm:inline">AI Mode</span>
-              </Link>
+             
               <a href="#" className="text-white hover:text-gray-300 flex items-center whitespace-nowrap">
                 <svg className="h-5 w-5 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -227,7 +222,7 @@ function SearchPageContent() {
                   <span className="text-xs text-white">Selected Branch</span>
                   <div className="flex items-center">
                     <span className="text-white text-sm font-medium">Birmingham - </span>
-                    <select
+                    {/* <select
                       value={selectedUserId || ''}
                       onChange={(e) => setSelectedUserId(e.target.value || null)}
                       className="appearance-none bg-transparent text-sm font-medium focus:outline-none text-white"
@@ -241,7 +236,7 @@ function SearchPageContent() {
                     </select>
                     <svg className="h-4 w-4 text-white ml-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
+                    </svg> */}
                   </div>
                 </div>
               </div>
@@ -354,7 +349,7 @@ function SearchPageContent() {
 
       {/* Navigation */}
       <nav className="bg-gray-100 border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <button className="px-4 py-3 flex items-center hover:bg-gray-200 transition-colors uppercase text-sm font-medium">
@@ -369,7 +364,7 @@ function SearchPageContent() {
       </nav>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-7xl mx-auto py-6">
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Filter Sidebar */}
           <div className="lg:w-64 flex-shrink-0">
@@ -488,7 +483,7 @@ function SearchPageContent() {
         </div>
       </div>
       <footer className="bg-black text-white py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
           {/* Logo and Contact */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
             <div className="mb-6 md:mb-0">

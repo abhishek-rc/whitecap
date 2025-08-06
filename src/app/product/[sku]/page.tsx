@@ -146,7 +146,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ sku: s
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto py-8">
           <div className="animate-pulse">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
               <div className="bg-gray-200 rounded-lg h-96"></div>
@@ -165,7 +165,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ sku: s
   if (error || !productData) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto py-8">
           <div className="text-center">
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -210,7 +210,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ sku: s
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-gray-900 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
           {/* Desktop Header */}
           <div className="hidden md:flex justify-between items-center h-16">
             <div className="flex items-center">
@@ -397,7 +397,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ sku: s
       
       {/* Navigation */}
       <nav className="bg-gray-100 border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between h-10">
             <div className="flex items-center space-x-4">
               <button
@@ -414,7 +414,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ sku: s
         </div>
       </nav>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto py-8">
         {/* Product Details */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-8">
           {/* Brand Logo */}
@@ -613,7 +613,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ sku: s
         />
       </div>
       <footer className="bg-black text-white py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
           {/* Logo and Contact */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
             <div className="mb-6 md:mb-0">

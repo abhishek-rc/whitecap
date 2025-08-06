@@ -295,8 +295,8 @@ export default function AIDrawer() {
     <div className="h-screen flex flex-col bg-gray-50">
       {/* Header */}
       {/* Header */}
-      <header className="bg-black border-b border-gray-800 text-white py-4">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <header className="bg-black border-b border-gray-800 text-white py-8">
+        <div className="max-w-7xl mx-auto">
           {/* Desktop Header */}
           <div className="hidden md:flex justify-between items-center">
             <div className="flex items-center">

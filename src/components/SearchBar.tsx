@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { getOrCreateVisitorId } from '@/lib/visitorId';
 
 interface Suggestion {
@@ -157,15 +158,13 @@ export default function SearchBar({ onSearch, initialQuery = '' }: SearchBarProp
     }
   };
 
+  const router = useRouter();
+
   return (
     <div className="relative w-full max-w-2xl mx-auto">
-      <form onSubmit={handleSubmit} className="relative">
+      <div className="flex items-center space-x-2">
+        <form onSubmit={handleSubmit} className="relative flex-1">
         <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
           <input
             ref={inputRef}
             type="text"
@@ -176,22 +175,36 @@ export default function SearchBar({ onSearch, initialQuery = '' }: SearchBarProp
             onKeyDown={handleKeyDown}
             onFocus={() => query && setShowSuggestions(true)}
             onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-            placeholder="Search products, SKUs, brands..."
-            className="block w-full pl-10 pr-12 py-3 text-gray-700 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            placeholder="Search by name, brand, product id."
+            className="w-full bg-white text-gray-800 pl-3 pr-12 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500"
           />
           {loading && (
-            <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+            <div className="absolute inset-y-0 right-12 pr-3 flex items-center">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-600"></div>
             </div>
           )}
         </div>
         <button
           type="submit"
-          className="absolute right-2 top-1/2 transform -translate-y-1/2 px-4 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          className="absolute inset-y-0 right-0 px-3 bg-yellow-500 rounded-r-md flex items-center justify-center hover:bg-yellow-600 transition-colors"
         >
-          Search
+          <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
         </button>
-      </form>
+        </form>
+        
+        <button
+          onClick={() => router.push('/ai-support')}
+          className="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors flex items-center"
+          title="AI Shopping Assistant"
+        >
+          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+          </svg>
+          <span className="hidden sm:inline ml-2">AI Mode</span>
+        </button>
+      </div>
 
       {/* Suggestions Dropdown */}
       {showSuggestions && suggestions.length > 0 && (

@@ -62,8 +62,8 @@ const CartPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-black border-b border-gray-800 text-white py-4">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <header className="bg-black border-b border-gray-800 text-white py-8">
+        <div className="max-w-7xl mx-auto">
           {/* Desktop Header */}
           <div className="hidden md:flex justify-between items-center">
             <div className="flex items-center">
@@ -454,7 +454,7 @@ const CartPage = () => {
         </div>
       </div>
       <footer className="bg-black text-white py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
           {/* Logo and Contact */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
             <div className="mb-6 md:mb-0">
