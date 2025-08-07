@@ -11,6 +11,7 @@ export async function GET(request: NextRequest) {
   const limit = parseInt(searchParams.get('limit') || '20');
   const categories = searchParams.getAll('category');
   const brands = searchParams.getAll('brand');
+  const attributesCategories = searchParams.getAll('attributesCategory');
 
   const availabilities = searchParams.getAll('availability');
   const warehouses = searchParams.getAll('warehouse');
@@ -53,6 +54,7 @@ export async function GET(request: NextRequest) {
       limit,
       category: categories.join(','),
       brand: brands.join(','),
+      attributesCategory: attributesCategories.join(','),
       availability: availabilities.join(','),
       warehouse: warehouses.join(','),
       accset: accsets.join(','),
@@ -96,6 +98,7 @@ export async function GET(request: NextRequest) {
     const filters: Record<string, unknown> = {};
     if (categories.length > 0) filters.category = categories;
     if (brands.length > 0) filters.brand = brands;
+    if (attributesCategories.length > 0) filters.attributesCategory = attributesCategories;
 
     if (availabilities.length > 0) filters.availability = availabilities;
     if (warehouses.length > 0) filters.warehouse = warehouses;
@@ -133,6 +136,7 @@ export async function GET(request: NextRequest) {
     console.log('  - query:', query);
     console.log('  - categories:', categories);
     console.log('  - brands:', brands);
+    console.log('  - attributesCategories:', attributesCategories);
     console.log('  - materials:', materials);
     console.log('  - availabilities:', availabilities);
     console.log('  - warehouses:', warehouses);
@@ -401,6 +405,7 @@ export async function GET(request: NextRequest) {
         const facets: any = {
           categories: [],
           brands: [],
+          attributesCategory: [],
           availability: [],
           accsets: [],
           warehouses: [],
@@ -444,6 +449,11 @@ export async function GET(request: NextRequest) {
             case 'attributes.brand.text':
             case 'brand':
               facets.brands = values;
+              break;
+            case 'attributes.category':
+            case 'attributes.category.text':
+            case 'attributesCategory':
+              facets.attributesCategory = values;
               break;
             case 'availability':
               facets.availability = values;

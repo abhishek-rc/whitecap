@@ -374,7 +374,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ sku: s
                     </svg>
                     <span className="text-sm">Selected Branch</span>
                   </div>
-                  <div className="pl-8">
+                  {/* <div className="pl-8">
                     <select
                       value={selectedUserId || ''}
                       onChange={(e) => setSelectedUserId(e.target.value || null)}
@@ -387,7 +387,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ sku: s
                         </option>
                       ))}
                     </select>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </div>

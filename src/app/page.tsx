@@ -325,7 +325,7 @@ export default function Home() {
                     </svg>
                     <span className="text-sm">Selected Branch</span>
                   </div>
-                  <div className="pl-8">
+                  {/* <div className="pl-8">
                     <select
                       value={selectedUserId || ''}
                       onChange={(e) => handleUserChange(e.target.value)}
@@ -338,7 +338,7 @@ export default function Home() {
                         </option>
                       ))}
                     </select>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </div>

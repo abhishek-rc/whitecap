@@ -101,6 +101,11 @@ function SearchPageContent() {
             categories: [{ value: 'General Products', count: 0 }],
             brands: [{ value: 'Milwaukee', count: 0 }],
             availability: [{ value: 'Available', count: 0 }],
+            attributesCategory: [
+              { value: 'Hand Tools', count: 0 },
+              { value: 'Power Tools and Equipment', count: 0 },
+              { value: 'Anchoring and Fasteners', count: 0 }
+            ],
             priceRanges: [],
             warehouses: [],
             accsets: [],
@@ -117,6 +122,11 @@ function SearchPageContent() {
           categories: [{ value: 'General Products', count: 0 }],
           brands: [{ value: 'Milwaukee', count: 0 }],
           availability: [{ value: 'Available', count: 0 }],
+          attributesCategory: [
+            { value: 'Hand Tools', count: 0 },
+            { value: 'Power Tools and Equipment', count: 0 },
+            { value: 'Anchoring and Fasteners', count: 0 }
+          ],
           priceRanges: [],
           warehouses: [],
           accsets: [],
@@ -153,6 +163,9 @@ function SearchPageContent() {
       }
       if (newFilters.brand?.length) {
         newFilters.brand.forEach(brand => params.append('brand', brand));
+      }
+      if (newFilters.attributesCategory?.length) {
+        newFilters.attributesCategory.forEach(category => params.append('attributesCategory', category));
       }
       if (newFilters.availability?.length) {
         newFilters.availability.forEach(avail => params.append('availability', avail));

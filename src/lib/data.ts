@@ -69,6 +69,7 @@ export interface SearchFilters {
   warehouse?: string[];
   sortBy?: string;
   // Comprehensive product attribute filters
+  attributesCategory?: string[];
   material?: string[];
   driveDesign?: string[];
   bitSizes?: string[];

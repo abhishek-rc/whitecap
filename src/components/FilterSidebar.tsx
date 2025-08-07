@@ -11,6 +11,7 @@ interface Facets {
   accsets: Array<{ value: string; count: number }>;
   availability: Array<{ value: string; count: number }>;
   // Comprehensive product attribute filters
+  attributesCategory?: Array<{ value: string; count: number }>;
   materials?: Array<{ value: string; count: number }>;
   driveDesign?: Array<{ value: string; count: number }>;
   bitSizes?: Array<{ value: string; count: number }>;
@@ -36,9 +37,10 @@ interface FilterSidebarProps {
   facets?: Facets;
   filters: SearchFilters;
   onFilterChange: (filters: SearchFilters) => void;
+  showAllFilters?: boolean;
 }
 
-export default function FilterSidebar({ facets, filters, onFilterChange }: FilterSidebarProps) {
+export default function FilterSidebar({ facets, filters, onFilterChange, showAllFilters }: FilterSidebarProps) {
   
   // Fallback static filters for testing
   const fallbackFacets = {
@@ -60,6 +62,18 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
       { value: 'HARMLESS FOOD CO', count: 18 },
       { value: 'NEW WAY', count: 15 },
       { value: 'ANY BRAND', count: 12 }
+    ],
+    attributesCategory: [
+      { value: 'Adhesives, Caulk and Sealants', count: 287 },
+      { value: 'Aldridge', count: 45 },
+      { value: 'Anchoring and Fasteners', count: 2019 },
+      { value: 'Building Materials', count: 744 },
+      { value: 'Cleaning Tools and Supplies', count: 174 },
+      { value: 'Concrete and Chemicals', count: 454 },
+      { value: 'Concrete Forming and Accessories', count: 945 },
+      { value: 'Electrical and Lighting', count: 322 },
+      { value: 'Erosion Control and Geosynthetics', count: 118 },
+      { value: 'Hand Tools', count: 2171 }
     ],
     priceRanges: [
       { min: 0, max: 25, count: 45 },
@@ -89,7 +103,7 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
 
   // Always use provided facets if available, even if arrays are empty
   // This ensures filters update dynamically when search results change
-  const activeFacets = facets ? facets : fallbackFacets;
+  const activeFacets: Facets = facets ? facets : fallbackFacets;
 
   // Use ref to track previous facets to avoid infinite loops
   const prevFacetsRef = useRef<Facets | undefined>(undefined);
@@ -147,6 +161,19 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
           }
           if (validBrands.length > 0) {
             validFilters.brand = validBrands;
+          }
+        }
+        
+        // Check if current attributes.category filters are still valid
+        if (filters.attributesCategory?.length) {
+          const validAttributesCategories = filters.attributesCategory.filter(category => 
+            facets.attributesCategory?.some(f => f.value === category)
+          );
+          if (validAttributesCategories.length !== filters.attributesCategory.length) {
+            hasChanges = true;
+          }
+          if (validAttributesCategories.length > 0) {
+            validFilters.attributesCategory = validAttributesCategories;
           }
         }
         
@@ -214,6 +241,7 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
   const [expandedSections, setExpandedSections] = useState({
     categories: true,
     brands: true,
+    attributesCategory: true,
     sfPreferred: true,
     warehouses: false,
     accsets: false,
@@ -269,6 +297,18 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
     onFilterChange({
       ...filters,
       brand: newBrands.length > 0 ? newBrands : undefined
+    });
+  };
+
+  const handleAttributesCategoryChange = (category: string, checked: boolean) => {
+    const currentCategories = filters.attributesCategory || [];
+    const newCategories = checked
+      ? [...currentCategories, category]
+      : currentCategories.filter(c => c !== category);
+    
+    onFilterChange({
+      ...filters,
+      attributesCategory: newCategories.length > 0 ? newCategories : undefined
     });
   };
 
@@ -353,7 +393,7 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
     return !!(
       filters.category?.length ||
       filters.brand?.length ||
-
+      filters.attributesCategory?.length ||
       filters.priceRange?.min ||
       filters.priceRange?.max ||
       filters.warehouse?.length ||
@@ -409,8 +449,8 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
 
 
 
-      {/* Categories Filter - Hidden */}
-      {false && activeFacets?.categories && activeFacets.categories.length > 0 && (
+      {/* Categories Filter */}
+      {activeFacets?.categories && activeFacets.categories.length > 0 && (
         <FilterSection
           title="Categories"
           isExpanded={expandedSections.categories}
@@ -452,6 +492,34 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
                 />
                 <span className="ml-2 text-sm text-gray-700 flex-1 truncate">
                   {brand.value}
+                </span>
+              </label>
+            ))}
+          </div>
+        </FilterSection>
+      )}
+
+      {/* Attributes Category Filter */}
+      {activeFacets?.attributesCategory && activeFacets.attributesCategory.length > 0 && (
+        <FilterSection
+          title="Product Category"
+          isExpanded={expandedSections.attributesCategory}
+          onToggle={() => toggleSection('attributesCategory')}
+        >
+          <div className="space-y-2 max-h-48 overflow-y-auto">
+            {(showAllFilters ? activeFacets.attributesCategory : activeFacets.attributesCategory.slice(0, 10)).map((category) => (
+              <label key={category.value} className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={filters.attributesCategory?.includes(category.value) || false}
+                  onChange={(e) => handleAttributesCategoryChange(category.value, e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="ml-2 text-sm text-gray-700 flex-1 truncate">
+                  {category.value}
+                </span>
+                <span className="ml-2 text-xs text-gray-500">
+                  ({category.count})
                 </span>
               </label>
             ))}
@@ -776,6 +844,20 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
                 <button
                   onClick={() => handleBrandChange(brand, false)}
                   className="ml-1 text-gray-600 hover:text-gray-800"
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+            {filters.attributesCategory?.map((category) => (
+              <span
+                key={category}
+                className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-1 mb-1"
+              >
+                {category}
+                <button
+                  onClick={() => handleAttributesCategoryChange(category, false)}
+                  className="ml-1 text-blue-600 hover:text-blue-800"
                 >
                   ×
                 </button>

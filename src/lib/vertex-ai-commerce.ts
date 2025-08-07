@@ -892,6 +892,13 @@ class VertexAICommerceService {
           } else {
             filterParts.push(`attributes.brand: ANY("${value}")`);
           }
+        } else if (key === 'attributesCategory' && value) {
+          if (Array.isArray(value)) {
+            const valueStr = value.map(v => `"${v}"`).join(',');
+            filterParts.push(`attributes.category: ANY(${valueStr})`);
+          } else {
+            filterParts.push(`attributes.category: ANY("${value}")`);
+          }
         } else if (key === 'material' && value) {
           if (Array.isArray(value)) {
             const valueStr = value.map(v => `"${v}"`).join(',');

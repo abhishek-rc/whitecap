@@ -43,24 +43,24 @@ export async function GET(request: NextRequest) {
     const brandFilter = searchParams.get('brand');
     const userId = searchParams.get('userId');
 
-    // Build user event for recommended-for-you context
+    // Build user event for buy-it-again context
     const userEvent = {
-      eventType: 'home-page-view' as const,
+      eventType: 'purchase-complete' as const,
       visitorId,
       eventTime: new Date().toISOString(),
-      uri: '/recommendations/recommended-for-you',
+      uri: '/recommendations/buy-it-again',
       pageCategories: categoryFilter ? [categoryFilter] : [],
       userInfo: userId ? { userId } : undefined,
       attributes: {
         context: {
-          text: ['recommended-for-you', 'personalized', 'recommendation'],
+          text: ['buy-it-again', 'repeat-purchase', 'recommendation'],
           searchable: true,
           indexable: true
         }
       }
     };
 
-    // Build filter for recommended-for-you if category or brand is specified
+    // Build filter for buy-it-again if category or brand is specified
     let filter = '';
     const filters: string[] = [];
     
@@ -76,21 +76,13 @@ export async function GET(request: NextRequest) {
       filter = filters.join(' AND ');
     }
 
-
-
-    // TEMPORARILY DISABLED: Model not yet trained in new GCP project
-    // Get recommended-for-you products from Vertex AI using the recommended-for-you model
-    // const predictionResponse = await vertexAICommerceService.predict(
-    //   'recommended-for-you',
-    //   userEvent,
-    //   limit,
-    //   filter
-    // );
-
-    // Return empty result until model is trained
-    const predictionResponse = { results: [] };
-
-
+    // Get buy-it-again products from Vertex AI using the new buy-it-again model
+    const predictionResponse = await vertexAICommerceService.predict(
+      'buy-it-again', // Working: v3-buy-it-_buy-it-aga_1754470934568
+      userEvent,
+      limit,
+      filter
+    );
 
     // Transform results to our format
     const products = (predictionResponse.results || []).map((result: VertexAIResult) => {
@@ -114,7 +106,7 @@ export async function GET(request: NextRequest) {
         urlSlug: result.id.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
         price: 0,
         accset: 'VERTEX_AI',
-        keywords: ['recommended-for-you', 'personalized', 'recommendation'],
+        keywords: ['buy-it-again', 'repeat-purchase', 'recommendation'],
         orderLastMonth: 0,
         isActive: true,
         isDeleted: false,
@@ -127,22 +119,22 @@ export async function GET(request: NextRequest) {
         availableQuantity: (result.metadata as any)?.availableQuantity || (productData as any)?.availableQuantity || 0,
         totalStock: (productData as any)?.attributes?.totalStock?.numbers?.[0] || (result.metadata as any)?.availableQuantity || 0,
         stockWarehouses: (productData as any)?.attributes?.stockWarehouses?.numbers?.[0] || 0,
-        score: result.metadata?.score || 0.95,
-        reason: 'Personalized recommendations from Vertex AI recommendation model'
+        score: result.metadata?.score || 0.90,
+        reason: 'Buy it again recommendations from Vertex AI model'
       };
     });
 
     const responseData = {
       products,
-      score: products.length > 0 ? 0.95 : 0,
+      score: products.length > 0 ? 0.90 : 0,
       reason: products.length > 0 
-        ? 'Personalized recommendations from Vertex AI recommendation model' 
-        : 'No personalized recommendations found',
+        ? 'Buy it again recommendations from Vertex AI model' 
+        : 'No buy it again recommendations found',
       count: products.length,
-      type: 'recommended-for-you',
+      type: 'buy-it-again',
       metadata: {
-        model: 'recommended-for-you',
-        placementId: 'recommended-for-you',
+        model: 'buy-it-again',
+        placementId: 'buy-it-again',
         source: 'vertex-ai-live',
         timestamp: new Date().toISOString(),
         filters: {
@@ -156,24 +148,22 @@ export async function GET(request: NextRequest) {
       }
     };
 
-    
-
     return NextResponse.json(responseData);
 
   } catch (error) {
-    console.error('❌ Recommended-for-you recommendations API error:', error);
+    console.error('❌ Buy-it-again recommendations API error:', error);
     
     // Return error response without fallback to local data
     return NextResponse.json(
       { 
-        error: 'Failed to get recommended-for-you recommendations from Vertex AI',
+        error: 'Failed to get buy-it-again recommendations from Vertex AI',
         products: [],
         count: 0,
-        type: 'recommended-for-you',
+        type: 'buy-it-again',
         score: 0,
         reason: 'Vertex AI API error',
         metadata: {
-          model: 'recommended-for-you',
+          model: 'buy-it-again',
           source: 'vertex-ai-live',
           error: error instanceof Error ? error.message : 'Unknown error',
           timestamp: new Date().toISOString()
@@ -182,4 +172,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}

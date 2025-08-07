@@ -142,15 +142,19 @@ async function processRecommendations(request: NextRequest) {
     });
 
     // Map recommendation types to Vertex AI placement IDs
+    // Updated with new GCP project working models
     const placementMap: { [key: string]: string } = {
-      'similar-items': 'recently_viewed_default',
-      'frequently-bought-together': 'others_you_may_like_default',
-      'recommended-for-you': 'recommended_for_you_default',
-      'trending': 'most_popular_items_default',
-      'recently-viewed': 'recently_viewed_default'
+      'similar-items': 'similar-items', // Working: similar-it_similar-it_1753884121346
+      'frequently-bought-together': 'freq-bought-together', // Working: v5-freq-bo_frequently_1754470790176
+      'buy-it-again': 'buy-it-again', // Working: v3-buy-it-_buy-it-aga_1754470934568
+      
+      // Commented out non-working models - will add when they get trained
+      // 'recommended-for-you': 'recommended_for_you_default',
+      // 'trending': 'most_popular_items_default',
+      // 'recently-viewed': 'recently_viewed_default'
     };
 
-    const placementId = placementMap[type] || 'recently_viewed_default';
+    const placementId = placementMap[type] || 'similar-items'; // Default to working similar-items model
 
     // Build user event for context
     const userEvent = {
