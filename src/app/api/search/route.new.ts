@@ -30,7 +30,6 @@ export async function GET(request: NextRequest) {
     // Check cache first
     const cachedResult = cache.get(cacheKey);
     if (cachedResult) {
-      console.log('🎯 Cache hit for search query:', query);
       return NextResponse.json(cachedResult);
     }
 
@@ -42,7 +41,6 @@ export async function GET(request: NextRequest) {
     if (availability) filters.availability = availability;
 
     // **PRIMARY STRATEGY: Fast Local Search**
-    console.log('🚀 Starting fast local search for:', query);
     const localStartTime = Date.now();
     
     try {
@@ -55,7 +53,6 @@ export async function GET(request: NextRequest) {
       });
 
       const localTime = Date.now() - localStartTime;
-      console.log(`✅ Fast local search completed in ${localTime}ms`);
 
       const response = {
         results: localResult.products,
@@ -78,7 +75,6 @@ export async function GET(request: NextRequest) {
       console.error('Fast local search failed:', localError);
       
       // **FALLBACK STRATEGY: Try Vertex AI with very short timeout**
-      console.log('🔄 Falling back to Vertex AI search...');
       
       const filter = vertexAICommerceService.buildFilter(filters);
       let orderBy = '';
@@ -164,8 +160,7 @@ export async function GET(request: NextRequest) {
         cache.set(cacheKey, response, 5 * 60 * 1000);
         return NextResponse.json(response);
       } catch (vertexError) {
-        console.error('Vertex AI search also failed:', vertexError);
-        
+          
         // **ULTIMATE FALLBACK: Return empty but valid response**
         const response = {
           results: [],

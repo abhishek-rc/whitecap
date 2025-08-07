@@ -10,6 +10,26 @@ interface Facets {
   warehouses: Array<{ value: string; count: number }>;
   accsets: Array<{ value: string; count: number }>;
   availability: Array<{ value: string; count: number }>;
+  // Comprehensive product attribute filters
+  materials?: Array<{ value: string; count: number }>;
+  driveDesign?: Array<{ value: string; count: number }>;
+  bitSizes?: Array<{ value: string; count: number }>;
+  warranty?: Array<{ value: string; count: number }>;
+  pieces?: Array<{ value: string; count: number }>;
+  hasDiscount?: Array<{ value: string; count: number }>;
+  discountPercent?: Array<{ value: string; count: number }>;
+  bitMaterial?: Array<{ value: string; count: number }>;
+  screwdriverBitType?: Array<{ value: string; count: number }>;
+  drillBitType?: Array<{ value: string; count: number }>;
+  bitType?: Array<{ value: string; count: number }>;
+  chuckSize?: Array<{ value: string; count: number }>;
+  shankDiameter?: Array<{ value: string; count: number }>;
+  assembledWeight?: Array<{ value: string; count: number }>;
+  assembledHeight?: Array<{ value: string; count: number }>;
+  assembledWidth?: Array<{ value: string; count: number }>;
+  assembledDepth?: Array<{ value: string; count: number }>;
+  vendorName?: Array<{ value: string; count: number }>;
+  units?: Array<{ value: string; count: number }>;
 }
 
 interface FilterSidebarProps {
@@ -19,8 +39,6 @@ interface FilterSidebarProps {
 }
 
 export default function FilterSidebar({ facets, filters, onFilterChange }: FilterSidebarProps) {
-  console.log('FilterSidebar received facets:', facets); // Debug log
-  console.log('FilterSidebar filters:', filters); // Debug log
   
   // Fallback static filters for testing
   const fallbackFacets = {
@@ -98,7 +116,6 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
     
     // Only process if facets actually changed
     if (currentFacetsKey !== prevFacetsKey) {
-      console.log('Facets structure changed, checking filter validity');
       
       // When facets change (new search results), clean up invalid filters
       if (facets && Object.keys(filters).length > 0) {
@@ -112,7 +129,7 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
           );
           if (validCategories.length !== filters.category.length) {
             hasChanges = true;
-            console.log('Some category filters are no longer valid');
+            
           }
           if (validCategories.length > 0) {
             validFilters.category = validCategories;
@@ -126,7 +143,7 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
           );
           if (validBrands.length !== filters.brand.length) {
             hasChanges = true;
-            console.log('Some brand filters are no longer valid');
+            
           }
           if (validBrands.length > 0) {
             validFilters.brand = validBrands;
@@ -140,7 +157,7 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
           );
           if (validAvailability.length !== filters.availability.length) {
             hasChanges = true;
-            console.log('Some availability filters are no longer valid');
+            
           }
           if (validAvailability.length > 0) {
             validFilters.availability = validAvailability;
@@ -154,7 +171,7 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
           );
           if (validAccsets.length !== filters.accset.length) {
             hasChanges = true;
-            console.log('Some accset filters are no longer valid');
+            
           }
           if (validAccsets.length > 0) {
             validFilters.accset = validAccsets;
@@ -168,7 +185,7 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
           );
           if (validWarehouses.length !== filters.warehouse.length) {
             hasChanges = true;
-            console.log('Some warehouse filters are no longer valid');
+            
           }
           if (validWarehouses.length > 0) {
             validFilters.warehouse = validWarehouses;
@@ -184,7 +201,7 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
         
         // Update filters if there are changes
         if (hasChanges) {
-          console.log('Clearing invalid filters, old:', filters, 'new:', validFilters);
+              
           onFilterChange(validFilters);
         }
       }
@@ -202,6 +219,26 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
     accsets: false,
     availability: false,
     priceRanges: false,
+    // New comprehensive filters
+    materials: false,
+    driveDesign: false,
+    bitSizes: false,
+    warranty: false,
+    pieces: false,
+    hasDiscount: false,
+    discountPercent: false,
+    bitMaterial: false,
+    screwdriverBitType: false,
+    drillBitType: false,
+    bitType: false,
+    chuckSize: false,
+    shankDiameter: false,
+    assembledWeight: false,
+    assembledHeight: false,
+    assembledWidth: false,
+    assembledDepth: false,
+    vendorName: false,
+    units: false,
   });
 
   const toggleSection = (section: keyof typeof expandedSections) => {
@@ -285,6 +322,25 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
       ...filters,
       availability: newAvailability.length > 0 ? newAvailability : undefined
     });
+  };
+
+  // Generic filter handler for new comprehensive filters
+  const handleGenericFilterChange = (filterType: string, value: string, checked: boolean) => {
+    console.log('🔍 Filter change:', { filterType, value, checked });
+    const currentValues = (filters as any)[filterType] || [];
+    console.log('🔍 Current values:', currentValues);
+    const newValues = checked
+      ? [...currentValues, value]
+      : currentValues.filter((v: string) => v !== value);
+    console.log('🔍 New values:', newValues);
+    
+    const newFilters = {
+      ...filters,
+      [filterType]: newValues.length > 0 ? newValues : undefined
+    };
+    console.log('🔍 New filters object:', newFilters);
+    
+    onFilterChange(newFilters);
   };
 
 
@@ -504,7 +560,180 @@ export default function FilterSidebar({ facets, filters, onFilterChange }: Filte
         </FilterSection>
       )}
 
+      {/* Materials Filter */}
+      {activeFacets?.materials && activeFacets.materials.length > 0 && (
+        <FilterSection
+          title="Materials"
+          isExpanded={expandedSections.materials}
+          onToggle={() => toggleSection('materials')}
+        >
+          <div className="space-y-2 max-h-48 overflow-y-auto">
+            {activeFacets.materials.slice(0, 10).map((material) => (
+              <label key={material.value} className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={filters.material?.includes(material.value) || false}
+                  onChange={(e) => handleGenericFilterChange('material', material.value, e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="ml-2 text-sm text-gray-700 flex-1 truncate" title={material.value}>
+                  {material.value} ({material.count})
+                </span>
+              </label>
+            ))}
+          </div>
+        </FilterSection>
+      )}
 
+      {/* Warranty Filter */}
+      {activeFacets?.warranty && activeFacets.warranty.length > 0 && (
+        <FilterSection
+          title="Warranty"
+          isExpanded={expandedSections.warranty}
+          onToggle={() => toggleSection('warranty')}
+        >
+          <div className="space-y-2">
+            {activeFacets.warranty.map((warranty) => (
+              <label key={warranty.value} className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={filters.warranty?.includes(warranty.value) || false}
+                  onChange={(e) => handleGenericFilterChange('warranty', warranty.value, e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="ml-2 text-sm text-gray-700 flex-1 truncate">
+                  {warranty.value} ({warranty.count})
+                </span>
+              </label>
+            ))}
+          </div>
+        </FilterSection>
+      )}
+
+      {/* Discount Filter */}
+      {activeFacets?.hasDiscount && activeFacets.hasDiscount.length > 0 && (
+        <FilterSection
+          title="Discount"
+          isExpanded={expandedSections.hasDiscount}
+          onToggle={() => toggleSection('hasDiscount')}
+        >
+          <div className="space-y-2">
+            {activeFacets.hasDiscount.map((discount) => (
+              <label key={discount.value} className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={filters.hasDiscount?.includes(discount.value) || false}
+                  onChange={(e) => handleGenericFilterChange('hasDiscount', discount.value, e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="ml-2 text-sm text-gray-700 flex-1 truncate">
+                  {discount.value === 'true' ? 'On Sale' : 'Regular Price'} ({discount.count})
+                </span>
+              </label>
+            ))}
+          </div>
+        </FilterSection>
+      )}
+
+      {/* Discount Percentage Filter */}
+      {activeFacets?.discountPercent && activeFacets.discountPercent.length > 0 && (
+        <FilterSection
+          title="Discount Range"
+          isExpanded={expandedSections.discountPercent}
+          onToggle={() => toggleSection('discountPercent')}
+        >
+          <div className="space-y-2">
+            {activeFacets.discountPercent.map((range) => (
+              <label key={range.value} className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={filters.discountPercent?.includes(range.value) || false}
+                  onChange={(e) => handleGenericFilterChange('discountPercent', range.value, e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="ml-2 text-sm text-gray-700 flex-1 truncate">
+                  {range.value} ({range.count})
+                </span>
+              </label>
+            ))}
+          </div>
+        </FilterSection>
+      )}
+
+      {/* Chuck Size Filter */}
+      {activeFacets?.chuckSize && activeFacets.chuckSize.length > 0 && (
+        <FilterSection
+          title="Chuck Size"
+          isExpanded={expandedSections.chuckSize}
+          onToggle={() => toggleSection('chuckSize')}
+        >
+          <div className="space-y-2">
+            {activeFacets.chuckSize.map((size) => (
+              <label key={size.value} className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={filters.chuckSize?.includes(size.value) || false}
+                  onChange={(e) => handleGenericFilterChange('chuckSize', size.value, e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="ml-2 text-sm text-gray-700 flex-1 truncate">
+                  {size.value} ({size.count})
+                </span>
+              </label>
+            ))}
+          </div>
+        </FilterSection>
+      )}
+
+      {/* Bit Material Filter */}
+      {activeFacets?.bitMaterial && activeFacets.bitMaterial.length > 0 && (
+        <FilterSection
+          title="Bit Material"
+          isExpanded={expandedSections.bitMaterial}
+          onToggle={() => toggleSection('bitMaterial')}
+        >
+          <div className="space-y-2">
+            {activeFacets.bitMaterial.map((material) => (
+              <label key={material.value} className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={filters.bitMaterial?.includes(material.value) || false}
+                  onChange={(e) => handleGenericFilterChange('bitMaterial', material.value, e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="ml-2 text-sm text-gray-700 flex-1 truncate" title={material.value}>
+                  {material.value} ({material.count})
+                </span>
+              </label>
+            ))}
+          </div>
+        </FilterSection>
+      )}
+
+      {/* Bit Type Filter */}
+      {activeFacets?.bitType && activeFacets.bitType.length > 0 && (
+        <FilterSection
+          title="Bit Type"
+          isExpanded={expandedSections.bitType}
+          onToggle={() => toggleSection('bitType')}
+        >
+          <div className="space-y-2">
+            {activeFacets.bitType.map((type) => (
+              <label key={type.value} className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={filters.bitType?.includes(type.value) || false}
+                  onChange={(e) => handleGenericFilterChange('bitType', type.value, e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="ml-2 text-sm text-gray-700 flex-1 truncate">
+                  {type.value} ({type.count})
+                </span>
+              </label>
+            ))}
+          </div>
+        </FilterSection>
+      )}
 
       {/* Active Filters Summary */}
       {hasActiveFilters() && (

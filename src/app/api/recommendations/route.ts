@@ -173,9 +173,7 @@ async function processRecommendations(request: NextRequest) {
 
     // Get recommendations from Vertex AI Commerce with timeout
     let predictionResponse;
-    try {
-      console.log('🔮 Requesting predictions from Vertex AI:', { placementId, visitorId, sku, type });
-      
+    try {      
       // Use shorter timeout for Vercel deployment
       const vertexAIPromise = vertexAICommerceService.predict(
         placementId,
@@ -188,10 +186,7 @@ async function processRecommendations(request: NextRequest) {
         timeoutPromise
       ]);
       
-      console.log('✅ Predictions received:', { 
-        resultCount: predictionResponse.results?.length || 0,
-        hasAttributionToken: !!predictionResponse.attributionToken
-      });
+
     } catch (error) {
       console.error('❌ Prediction request failed:', error);
       
@@ -219,7 +214,7 @@ async function processRecommendations(request: NextRequest) {
 
     // If no recommendations from Vertex AI, try local fallback
     if (recommendations.length === 0) {
-      console.log('🔄 No Vertex AI recommendations, trying local fallback...');
+
       try {
         const { recommendationEngine } = await import('@/lib/recommendations');
         
@@ -251,8 +246,7 @@ async function processRecommendations(request: NextRequest) {
           score: recommendationResult.score,
           reason: recommendationResult.reason
         }));
-        
-        console.log('✅ Local fallback provided:', recommendations.length, 'recommendations');
+
       } catch (fallbackError) {
         console.error('❌ Local fallback also failed:', fallbackError);
       }

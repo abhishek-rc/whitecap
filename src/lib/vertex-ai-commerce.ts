@@ -183,6 +183,18 @@ interface SearchRequest {
   labels?: { [key: string]: string };
   spellCorrectionSpec?: SpellCorrectionSpec;
   entity?: string;
+  // Additional properties to match dashboard request
+  useMostRecentServingConfig?: boolean;
+  readMask?: string;
+  useExpensiveRerankDeadline?: boolean;
+  availabilityOption?: {
+    enablePrimarySearch?: boolean;
+    enableSecondarySearch?: boolean;
+    enableAvailabilityCache?: boolean;
+  };
+  conversationalSearchSpec?: {
+    conversationPlanRequested?: boolean;
+  };
 }
 
 interface FacetSpec {
@@ -355,10 +367,7 @@ class VertexAICommerceService {
   }
 
   private async getAccessToken(): Promise<string> {
-    try {
-      console.log('🔐 Getting access token...');
-      const startTime = Date.now();
-      
+    try {      
       // Add timeout to prevent hanging
       const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(() => reject(new Error('Access token timeout after 30 seconds')), 30000);
@@ -370,10 +379,7 @@ class VertexAICommerceService {
         return accessToken.token || '';
       })();
       
-      const token = await Promise.race([tokenPromise, timeoutPromise]);
-      const duration = Date.now() - startTime;
-      
-      console.log(`✅ Access token obtained successfully in ${duration}ms`);
+      const token = await Promise.race([tokenPromise, timeoutPromise]);      
       return token;
     } catch (error) {
       console.error('❌ Error getting access token:', error);
@@ -572,7 +578,7 @@ class VertexAICommerceService {
       
       console.log('🌐 Search URL:', url);
 
-      // Build the base request
+      // Build MINIMAL request like our working direct test with ONLY dynamic facets
       const request: SearchRequest = {
         placement: `${this.catalogPath}/placements/default_search`,
         branch: this.branchPath,
@@ -580,44 +586,15 @@ class VertexAICommerceService {
         visitorId: searchRequest.visitorId || 'anonymous-user',
         pageSize: Math.min(searchRequest.pageSize || 20, 100),
         offset: searchRequest.offset || 0,
-        filter: searchRequest.filter || '',
-        facetSpecs: searchRequest.facetSpecs || [
-          {
-            facetKey: { key: 'attributes.brand' },
-            limit: 20
-          },
-          {
-            facetKey: { key: 'categories' },
-            limit: 20
-          },
-          {
-            facetKey: { key: 'attributes.isSFPreferred' },
-            limit: 2
-          },
-          {
-            facetKey: { key: 'availability' },
-            limit: 4
-          }
-        ],
-        boostSpec: searchRequest.boostSpec || {
-          conditionBoostSpecs: [
-            {
-              condition: 'availability: ANY("IN_STOCK")',
-              boost: 0.5
-            }
-          ]
-        },
-        queryExpansionSpec: {
-          condition: 'AUTO',
-          pinUnexpandedResults: true // Pin original results to ensure they appear first
-        },
-        spellCorrectionSpec: {
-          mode: 'AUTO'
-        },
-        // Remove variant rollup to avoid configuration issues
-        searchMode: 'PRODUCT_SEARCH_ONLY',
-        ...searchRequest
+        // ONLY dynamic facets - no specific facetSpecs
+        dynamicFacetSpec: { mode: "ENABLED" }
       };
+
+      // Add filter if provided
+      if (searchRequest.filter) {
+        request.filter = searchRequest.filter;
+        console.log('🔍 Adding filter to request:', searchRequest.filter);
+      }
 
       // Add userInfo if provided and contains userId
       if (searchRequest.userInfo && searchRequest.userInfo.userId) {
@@ -909,7 +886,84 @@ class VertexAICommerceService {
         } else if (key === 'category' && value) {
           filterParts.push(`categories: ANY("${value}")`);
         } else if (key === 'brand' && value) {
-          filterParts.push(`attributes.brand: ANY("${value}")`);
+          if (Array.isArray(value)) {
+            const valueStr = value.map(v => `"${v}"`).join(',');
+            filterParts.push(`attributes.brand: ANY(${valueStr})`);
+          } else {
+            filterParts.push(`attributes.brand: ANY("${value}")`);
+          }
+        } else if (key === 'material' && value) {
+          if (Array.isArray(value)) {
+            const valueStr = value.map(v => `"${v}"`).join(',');
+            filterParts.push(`attributes.ga_material: ANY(${valueStr})`);
+          } else {
+            filterParts.push(`attributes.ga_material: ANY("${value}")`);
+          }
+        } else if (key === 'driveDesign' && value) {
+          const valueStr = Array.isArray(value) ? value.map(v => `"${v}"`).join(',') : `"${value}"`;
+          filterParts.push(`attributes.cs_drive_design: ANY(${valueStr})`);
+        } else if (key === 'warranty' && value) {
+          const valueStr = Array.isArray(value) ? value.map(v => `"${v}"`).join(',') : `"${value}"`;
+          filterParts.push(`attributes.ga_warranty: ANY(${valueStr})`);
+        } else if (key === 'hasDiscount' && value) {
+          const valueStr = Array.isArray(value) ? value.map(v => `"${v}"`).join(',') : `"${value}"`;
+          filterParts.push(`attributes.hasDiscount: ANY(${valueStr})`);
+        } else if (key === 'discountPercent' && value) {
+          // Handle discount percentage ranges
+          if (Array.isArray(value)) {
+            const rangeFilters: string[] = [];
+            value.forEach(range => {
+              if (range === '0-10%') {
+                rangeFilters.push('(attributes.discountPercent.numbers >= 0.0 AND attributes.discountPercent.numbers < 10.0)');
+              } else if (range === '10-20%') {
+                rangeFilters.push('(attributes.discountPercent.numbers >= 10.0 AND attributes.discountPercent.numbers < 20.0)');
+              } else if (range === '20-30%') {
+                rangeFilters.push('(attributes.discountPercent.numbers >= 20.0 AND attributes.discountPercent.numbers < 30.0)');
+              } else if (range === '30-50%') {
+                rangeFilters.push('(attributes.discountPercent.numbers >= 30.0 AND attributes.discountPercent.numbers < 50.0)');
+              } else if (range === '50%+') {
+                rangeFilters.push('attributes.discountPercent.numbers >= 50.0');
+              }
+            });
+            if (rangeFilters.length > 0) {
+              filterParts.push(`(${rangeFilters.join(' OR ')})`);
+            }
+          }
+        } else if (key === 'bitMaterial' && value) {
+          const valueStr = Array.isArray(value) ? value.map(v => `"${v}"`).join(',') : `"${value}"`;
+          filterParts.push(`attributes.cs_bit_material: ANY(${valueStr})`);
+        } else if (key === 'bitType' && value) {
+          const valueStr = Array.isArray(value) ? value.map(v => `"${v}"`).join(',') : `"${value}"`;
+          filterParts.push(`attributes.cs_bit_type: ANY(${valueStr})`);
+        } else if (key === 'chuckSize' && value) {
+          const valueStr = Array.isArray(value) ? value.map(v => `"${v}"`).join(',') : `"${value}"`;
+          filterParts.push(`attributes.cs_chuck_size: ANY(${valueStr})`);
+        } else if (key === 'shankDiameter' && value) {
+          const valueStr = Array.isArray(value) ? value.map(v => `"${v}"`).join(',') : `"${value}"`;
+          filterParts.push(`attributes.cs_shank_diameter: ANY(${valueStr})`);
+        } else if (key === 'assembledWeight' && value) {
+          const valueStr = Array.isArray(value) ? value.map(v => `"${v}"`).join(',') : `"${value}"`;
+          filterParts.push(`attributes.assembledWeight: ANY(${valueStr})`);
+        } else if (key === 'assembledHeight' && value) {
+          const valueStr = Array.isArray(value) ? value.map(v => `"${v}"`).join(',') : `"${value}"`;
+          filterParts.push(`attributes.assembledHeight: ANY(${valueStr})`);
+        } else if (key === 'assembledWidth' && value) {
+          const valueStr = Array.isArray(value) ? value.map(v => `"${v}"`).join(',') : `"${value}"`;
+          filterParts.push(`attributes.assembledWidth: ANY(${valueStr})`);
+        } else if (key === 'assembledDepth' && value) {
+          const valueStr = Array.isArray(value) ? value.map(v => `"${v}"`).join(',') : `"${value}"`;
+          filterParts.push(`attributes.assembledDepth: ANY(${valueStr})`);
+        } else if (key === 'vendorName' && value) {
+          const valueStr = Array.isArray(value) ? value.map(v => `"${v}"`).join(',') : `"${value}"`;
+          filterParts.push(`vendorName: ANY(${valueStr})`);
+        } else if (key === 'units' && value) {
+          const valueStr = Array.isArray(value) ? value.map(v => `"${v}"`).join(',') : `"${value}"`;
+          filterParts.push(`units: ANY(${valueStr})`);
+        } else if (key === 'priceRange' && value && typeof value === 'object' && value.min !== undefined && value.max !== undefined) {
+          // Handle price range filtering using Vertex AI IN syntax
+          // Format: price: IN(lower_bound, upper_bound)
+          // Use 'i' suffix to make bounds inclusive
+          filterParts.push(`price: IN(${value.min}i, ${value.max}i)`);
         } else if (Array.isArray(value)) {
           const valueStr = value.map(v => `"${v}"`).join(',');
           filterParts.push(`${key}: ANY(${valueStr})`);
@@ -917,7 +971,9 @@ class VertexAICommerceService {
       }
     });
 
-    return filterParts.join(' AND ');
+    const filterString = filterParts.join(' AND ');
+    console.log('🔧 Generated filter string:', filterString);
+    return filterString;
   }
 
   /**
@@ -1022,6 +1078,8 @@ class VertexAICommerceService {
   }
 }
 
-export const vertexAICommerceService = new VertexAICommerceService();
-export { VertexAICommerceService, type Product, type SearchRequest, type SearchResponse, type UserEvent };
+// Create and export the service instance
+const vertexAICommerceService = new VertexAICommerceService();
+
+export { vertexAICommerceService, VertexAICommerceService, type Product, type SearchRequest, type SearchResponse, type UserEvent };
 

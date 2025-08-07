@@ -79,11 +79,30 @@ class SimpleCache {
     limit: number;
     category?: string;
     brand?: string;
-  
     availability?: string;
     warehouse?: string;
-      accset?: string;
-  priceMin?: number;
+    accset?: string;
+    // Extended comprehensive filters
+    material?: string;
+    driveDesign?: string;
+    bitSizes?: string;
+    warranty?: string;
+    pieces?: string;
+    hasDiscount?: string;
+    discountPercent?: string;
+    bitMaterial?: string;
+    screwdriverBitType?: string;
+    drillBitType?: string;
+    bitType?: string;
+    chuckSize?: string;
+    shankDiameter?: string;
+    assembledWeight?: string;
+    assembledHeight?: string;
+    assembledWidth?: string;
+    assembledDepth?: string;
+    vendorName?: string;
+    units?: string;
+    priceMin?: number;
     priceMax?: number;
     sortBy?: string;
   }): string {
@@ -94,10 +113,29 @@ class SimpleCache {
       limit: params.limit,
       category: params.category || '',
       brand: params.brand || '',
-  
       availability: params.availability || '',
       warehouse: params.warehouse || '',
       accset: params.accset || '',
+      // Extended comprehensive filters
+      material: params.material || '',
+      driveDesign: params.driveDesign || '',
+      bitSizes: params.bitSizes || '',
+      warranty: params.warranty || '',
+      pieces: params.pieces || '',
+      hasDiscount: params.hasDiscount || '',
+      discountPercent: params.discountPercent || '',
+      bitMaterial: params.bitMaterial || '',
+      screwdriverBitType: params.screwdriverBitType || '',
+      drillBitType: params.drillBitType || '',
+      bitType: params.bitType || '',
+      chuckSize: params.chuckSize || '',
+      shankDiameter: params.shankDiameter || '',
+      assembledWeight: params.assembledWeight || '',
+      assembledHeight: params.assembledHeight || '',
+      assembledWidth: params.assembledWidth || '',
+      assembledDepth: params.assembledDepth || '',
+      vendorName: params.vendorName || '',
+      units: params.units || '',
       priceMin: params.priceMin || 0,
       priceMax: params.priceMax || 0,
       sortBy: params.sortBy || ''

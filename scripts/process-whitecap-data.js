@@ -3,11 +3,12 @@
 /**
  * Process Whitecap Data Files for Vertex AI Search
  * 
- * This script reads four Excel files:
+ * This script reads three Excel files:
  * - US_Products_1.xlsx: Product information
  * - US_Attribute_Values_1.xlsx: Product attributes
- * - US_Product_Warehouses_1.xlsx: Warehouse stock information
  * - US_Product_Images_1.xlsx: Product images
+ * 
+ * Stock information is generated with random dummy data for testing.
  * 
  * And combines them into a single JSON file ready for Vertex AI Search upload.
  * 
@@ -27,19 +28,16 @@ const BRANCH_ID = process.env.VERTEX_AI_BRANCH_ID || '0';
 // Data limits for production processing
 const MAX_PRODUCTS = 100000;         // Limit to 100K products
 const MAX_ATTRIBUTES = 300000;       // Limit to 300K attributes
-const MAX_WAREHOUSES = 500000;       // Limit to 500K warehouse records
 const MAX_IMAGES = 500000;           // Limit to 500K image records
 
 // For testing with smaller datasets, use these smaller limits:
 // const MAX_PRODUCTS = 100;          // Limit to 100 products for testing
 // const MAX_ATTRIBUTES = 500;        // Limit to 500 attributes for testing  
-// const MAX_WAREHOUSES = 500;        // Limit to 500 warehouse records for testing
 // const MAX_IMAGES = 1000;           // Limit to 1000 image records for testing
 
 // File paths (relative to project root)
 const PRODUCTS_FILE = path.join(__dirname, '..', 'US_Products_1.xlsx');
 const ATTRIBUTES_FILE = path.join(__dirname, '..', 'US_Attribute_Values_1.xlsx');
-const WAREHOUSES_FILE = path.join(__dirname, '..', 'US_Product_Warehouses_1.xlsx');
 const IMAGES_FILE = path.join(__dirname, '..', 'US_Product_Images_1.xlsx');
 const OUTPUT_FILE = path.join(__dirname, '..', 'whitecap-vertex-ai-products.json');
 
@@ -67,6 +65,33 @@ class WhitecapDataProcessor {
       searchable,
       indexable
     };
+  }
+
+  /**
+   * Generate random dummy stock data for testing
+   */
+  generateDummyStockData() {
+    const warehouses = ['WH001', 'WH002', 'WH003', 'WH004', 'WH005'];
+    const stockData = [];
+    
+    // Generate 1-3 warehouse entries per product
+    const warehouseCount = Math.floor(Math.random() * 3) + 1;
+    
+    for (let i = 0; i < warehouseCount; i++) {
+      const warehouse = warehouses[Math.floor(Math.random() * warehouses.length)];
+      const quantity = Math.floor(Math.random() * 1000) + 1; // 1-1000 stock
+      
+      stockData.push({
+        WarehouseId: warehouse,
+        WarehouseCode: warehouse,
+        LocationId: warehouse,
+        Quantity: quantity,
+        Stock: quantity,
+        AvailableQuantity: quantity
+      });
+    }
+    
+    return stockData;
   }
 
   /**
@@ -223,6 +248,7 @@ class WhitecapDataProcessor {
 
   /**
    * Generate pricing information with realistic values
+   * Ensures sufficient items have sale pricing (price < originalPrice)
    */
   generatePricing(product) {
     let price = 0;
@@ -242,12 +268,17 @@ class WhitecapDataProcessor {
       price = Math.round((Math.random() * 140 + 10) * 100) / 100;
     }
     
-    // Generate discount scenario (70% chance)
-    const hasDiscount = Math.random() < 0.7;
-    if (hasDiscount && originalPrice === 0) {
-      // Create original price 10-40% higher than sale price
-      const discountPercent = Math.random() * 0.3 + 0.1;
-      originalPrice = Math.round((price / (1 - discountPercent)) * 100) / 100;
+    // Generate discount scenario (80% chance to ensure enough sale items)
+    const hasDiscount = Math.random() < 0.8;
+    if (hasDiscount) {
+      if (originalPrice === 0) {
+        // Create original price 15-50% higher than sale price
+        const discountPercent = Math.random() * 0.35 + 0.15; // 15% to 50% discount
+        originalPrice = Math.round((price / (1 - discountPercent)) * 100) / 100;
+      } else if (originalPrice <= price) {
+        // If originalPrice exists but isn't higher than price, make it higher
+        originalPrice = Math.round((price * (1.15 + Math.random() * 0.35)) * 100) / 100;
+      }
     }
     
     const pricingInfo = {
@@ -256,6 +287,7 @@ class WhitecapDataProcessor {
       priceRange: {}
     };
     
+    // Only add originalPrice if it's actually higher than price (creates sale condition)
     if (originalPrice > price) {
       pricingInfo.originalPrice = originalPrice;
     }
@@ -499,12 +531,31 @@ class WhitecapDataProcessor {
     
     // Add custom attributes from attributes file (only if they have valid values)
     productAttributes.forEach((attr, index) => {
-      if (index < 20) { // Limit to prevent too many attributes
-        const attrName = (attr.AttributeName || attr.Name || `attribute_${index}`).toLowerCase().replace(/[^a-z0-9]/g, '_');
-        const attrValue = attr.Value || attr.AttributeValue;
-        
-        const customAttr = this.createTextAttribute([attrValue]);
-        if (customAttr && attrName) {
+      // Remove the 20-attribute limit to include all attributes
+      // Use the correct field names from the Excel structure
+      const attrName = (
+        attr['Attribute Type'] ||  // This is the correct field for attribute names like CS_BLADE LENGTH, GA_MATERIAL, etc.
+        attr.AttributeName || 
+        attr.Name || 
+        attr.Attribute_Name || 
+        attr.ATTRIBUTE_NAME ||
+        attr['Attribute Name'] ||
+        `attribute_${index}`
+      ).toString().toLowerCase().replace(/[^a-z0-9]/g, '_');
+      
+      const attrValue = (
+        attr.Value ||  // This is the correct field for attribute values
+        attr.AttributeValue || 
+        attr.Attribute_Value || 
+        attr.ATTRIBUTE_VALUE ||
+        attr['Attribute Value'] ||
+        attr.Val
+      );
+      
+      // Only add if we have both a valid name and value
+      if (attrName && attrValue && attrValue.toString().trim() !== '') {
+        const customAttr = this.createTextAttribute([attrValue.toString()]);
+        if (customAttr) {
           attributes[attrName] = customAttr;
         }
       }
@@ -572,14 +623,14 @@ class WhitecapDataProcessor {
       console.log(`Branch: ${BRANCH_ID}`);
       console.log('');
 
-      // Step 1: Read all Excel files with limits
+      // Step 1: Read Excel files (without warehouse file - using dummy stock data)
       console.log('📖 Reading Excel files (with limits for POC)...');
       const productsData = this.readExcelFile(PRODUCTS_FILE, null, MAX_PRODUCTS);
       const attributesData = this.readExcelFile(ATTRIBUTES_FILE, null, MAX_ATTRIBUTES);
-      const warehousesData = this.readExcelFile(WAREHOUSES_FILE, null, MAX_WAREHOUSES);
       const imagesData = this.readExcelFile(IMAGES_FILE, null, MAX_IMAGES);
       
-      console.log(`✅ Loaded ${productsData.length} products, ${attributesData.length} attributes, ${warehousesData.length} warehouse records, ${imagesData.length} image records`);
+      console.log(`✅ Loaded ${productsData.length} products, ${attributesData.length} attributes, ${imagesData.length} image records`);
+      console.log('📦 Using random dummy stock data instead of warehouse file');
       console.log('');
 
       // Step 2: Group related data by product ID
@@ -587,27 +638,29 @@ class WhitecapDataProcessor {
       
       // Create lookup maps for efficient data combination
       const attributesByProduct = new Map();
-      const warehousesByProduct = new Map();
       
-      // Group attributes by product
-      attributesData.forEach(attr => {
-        const productId = attr.ProductId || attr.ProductCode || attr.SKU || attr.Product_Id;
+      // Group attributes by product - try multiple possible field names for product ID
+      attributesData.forEach((attr, index) => {
+        const productId = (
+          attr['Product.Product Number'] ||  // This is the correct field name for attributes file
+          attr.ProductId || 
+          attr.ProductCode || 
+          attr.SKU || 
+          attr.Product_Id || 
+          attr.PRODUCT_ID ||
+          attr['Product ID'] ||
+          attr.Id ||
+          attr.ID ||
+          attr.product_id ||
+          attr.ProductID
+        );
+        
         if (productId) {
-          if (!attributesByProduct.has(productId)) {
-            attributesByProduct.set(productId, []);
+          const productIdStr = productId.toString();
+          if (!attributesByProduct.has(productIdStr)) {
+            attributesByProduct.set(productIdStr, []);
           }
-          attributesByProduct.get(productId).push(attr);
-        }
-      });
-      
-      // Group warehouses by product
-      warehousesData.forEach(warehouse => {
-        const productId = warehouse.ProductId || warehouse.ProductCode || warehouse.SKU || warehouse.Product_Id;
-        if (productId) {
-          if (!warehousesByProduct.has(productId)) {
-            warehousesByProduct.set(productId, []);
-          }
-          warehousesByProduct.get(productId).push(warehouse);
+          attributesByProduct.get(productIdStr).push(attr);
         }
       });
       
@@ -615,8 +668,8 @@ class WhitecapDataProcessor {
       const imagesByProduct = this.processImages(imagesData);
       
       console.log(`📊 Grouped ${attributesByProduct.size} products with attributes`);
-      console.log(`📊 Grouped ${warehousesByProduct.size} products with warehouse data`);
       console.log(`📊 Grouped ${imagesByProduct.size} products with images`);
+      console.log(`📦 Will generate random stock data for each product`);
       
       // Debug: Show some example products with images
       if (imagesByProduct.size > 0) {
@@ -633,24 +686,38 @@ class WhitecapDataProcessor {
 
       // Step 3: Transform each product
       console.log('🔄 Transforming products to Vertex AI format...');
+      
       const vertexProducts = [];
       let processedCount = 0;
       let skippedCount = 0;
       
       for (const product of productsData) {
-                            // Extract productId directly from Product Number field
-          const productId = product['Product Number'];
+                                    // Extract productId - try multiple possible field names and ensure string conversion
+        const productId = (
+          product['Product Number'] ||
+          product.ProductId || 
+          product.ProductCode || 
+          product.SKU || 
+          product.Product_Id || 
+          product.PRODUCT_ID ||
+          product['Product ID'] ||
+          product.Id ||
+          product.ID ||
+          product.product_id ||
+          product.ProductID
+        );
         
         if (!productId) {
           skippedCount++;
           continue;
         }
         
-        const productAttributes = attributesByProduct.get(productId) || [];
-        const warehouseData = warehousesByProduct.get(productId) || [];
-        const productImages = imagesByProduct.get(productId) || [];
+        const productIdStr = productId.toString();
+        const productAttributes = attributesByProduct.get(productIdStr) || [];
+        const warehouseData = this.generateDummyStockData(); // Generate random stock data
+        const productImages = imagesByProduct.get(productIdStr) || [];
         
-        // Product and image data is now linked correctly
+        // Product and image data is now linked correctly, using dummy stock data
         
         const vertexProduct = this.transformToVertexAIProduct(product, productAttributes, warehouseData, productImages);
         
@@ -685,9 +752,9 @@ class WhitecapDataProcessor {
           sourceFiles: {
             products: PRODUCTS_FILE,
             attributes: ATTRIBUTES_FILE,
-            warehouses: WAREHOUSES_FILE,
             images: IMAGES_FILE
-          }
+          },
+          stockDataSource: 'random_dummy_data'
         },
         products: vertexProducts
       };
@@ -725,19 +792,20 @@ class WhitecapDataProcessor {
   }
 }
 
-// Check if required files exist
-const requiredFiles = [PRODUCTS_FILE, ATTRIBUTES_FILE, WAREHOUSES_FILE, IMAGES_FILE];
+// Check if required files exist (warehouse file is no longer required)
+const requiredFiles = [PRODUCTS_FILE, ATTRIBUTES_FILE, IMAGES_FILE];
 const missingFiles = requiredFiles.filter(file => !fs.existsSync(file));
 
 if (missingFiles.length > 0) {
   console.error('❌ Missing required files:');
   missingFiles.forEach(file => console.error(`   ${file}`));
   console.error('');
-  console.error('Please ensure all four Excel files are in the project root:');
+  console.error('Please ensure all three Excel files are in the project root:');
   console.error('   - US_Products_1.xlsx');
   console.error('   - US_Attribute_Values_1.xlsx');
-  console.error('   - US_Product_Warehouses_1.xlsx');
   console.error('   - US_Product_Images_1.xlsx');
+  console.error('');
+  console.error('Note: Warehouse file is no longer required - using random dummy stock data');
   process.exit(1);
 }
 

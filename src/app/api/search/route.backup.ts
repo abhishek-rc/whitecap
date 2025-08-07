@@ -31,7 +31,6 @@ export async function GET(request: NextRequest) {
     // Check cache first
     const cachedResult = cache.get(cacheKey);
     if (cachedResult) {
-      console.log('🎯 Cache hit for search query:', query);
       return NextResponse.json(cachedResult);
     }
 
@@ -77,7 +76,6 @@ export async function GET(request: NextRequest) {
       
       // If no query, search for all products using wildcard
       if (!searchQuery || searchQuery.trim() === '') {
-        console.log('🔍 Empty query detected, searching for all products');
         searchQuery = '*';
       }
 
@@ -121,22 +119,15 @@ export async function GET(request: NextRequest) {
       searchResponse = await Promise.race([searchPromise, timeoutPromise]);
       
       // Debug: Log the actual search response structure
-      console.log('🔍 Search response structure:');
-      console.log('Total results:', searchResponse.totalSize);
-      console.log('Results count:', searchResponse.results?.length || 0);
-      if (searchResponse.results && searchResponse.results.length > 0) {
-        console.log('First result structure:', JSON.stringify(searchResponse.results[0], null, 2));
-      }
+
       
       // If Vertex AI returns no results but has a total count, fall back to local search
       if (searchResponse.totalSize > 0 && (!searchResponse.results || searchResponse.results.length === 0)) {
-        console.log('⚠️ Vertex AI returned total count but no results, falling back to local search');
         // Don't throw error, just fall through to catch block to trigger fallback
         const fallbackError = new Error('No results returned from Vertex AI despite total count');
         throw fallbackError;
       }
     } catch (vertexError) {
-      console.log('Vertex AI search failed, falling back to local search:', vertexError instanceof Error ? vertexError.message : String(vertexError));
       
       // Fast fallback to local search
       try {

@@ -282,6 +282,7 @@ class VertexAIAllergenDataUploader {
     if (productData.WEBSUBCATEG__c) categories.push(productData.WEBSUBCATEG__c);
 
     // Enhanced pricing logic with realistic data
+    // Ensures enough sale items for Vertex AI model requirements
     const generateEnhancedPricing = () => {
       // Use real cost data when available, otherwise generate realistic pricing
       let basePrice;
@@ -296,12 +297,12 @@ class VertexAIAllergenDataUploader {
         basePrice = Math.round((Math.random() * (priceRange.max - priceRange.min) + priceRange.min) * 100) / 100;
       }
       
-      // 40% chance of having a discount
-      const hasDiscount = Math.random() < 0.4;
+      // 80% chance of having a discount to ensure enough sale items
+      const hasDiscount = Math.random() < 0.8;
       
       if (hasDiscount) {
-        // Discount between 5% and 30%
-        const discountPercent = Math.random() * 0.25 + 0.05; // 5% to 30%
+        // Discount between 15% and 40%
+        const discountPercent = Math.random() * 0.25 + 0.15; // 15% to 40%
         const salePrice = Math.round(basePrice * (1 - discountPercent) * 100) / 100;
         
         return {

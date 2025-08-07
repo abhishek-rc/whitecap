@@ -50,6 +50,8 @@ function SearchPageContent() {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState('relevance');
   const [isInitialized, setIsInitialized] = useState(false);
+  const [allFilters, setAllFilters] = useState<any>(null);
+  const [loadingFilters, setLoadingFilters] = useState(false);
   
 
 
@@ -81,10 +83,60 @@ function SearchPageContent() {
     setStoredDemoUserId(selectedUserId);
   }, [selectedUserId]);
 
+  // Fetch all possible filters from Vertex AI Search on component mount
+  useEffect(() => {
+    const fetchAllFilters = async () => {
+      setLoadingFilters(true);
+      try {
+        const response = await fetch('/api/vertex-filters');
+        const data = await response.json();
+        
+        if (data.success) {
+          setAllFilters(data.data);
+          
+        } else {
+          console.error('❌ Failed to load Vertex AI filters:', data.error);
+          // Use fallback filters if Vertex AI fails
+          setAllFilters({
+            categories: [{ value: 'General Products', count: 0 }],
+            brands: [{ value: 'Milwaukee', count: 0 }],
+            availability: [{ value: 'Available', count: 0 }],
+            priceRanges: [],
+            warehouses: [],
+            accsets: [],
+            vendors: [],
+            vendorNames: [],
+            webCategories: [],
+            webSubCategories: []
+          });
+        }
+      } catch (error) {
+        console.error('❌ Error fetching Vertex AI filters:', error);
+        // Use fallback filters if API fails
+        setAllFilters({
+          categories: [{ value: 'General Products', count: 0 }],
+          brands: [{ value: 'Milwaukee', count: 0 }],
+          availability: [{ value: 'Available', count: 0 }],
+          priceRanges: [],
+          warehouses: [],
+          accsets: [],
+          vendors: [],
+          vendorNames: [],
+          webCategories: [],
+          webSubCategories: []
+        });
+      } finally {
+        setLoadingFilters(false);
+      }
+    };
+
+    fetchAllFilters();
+  }, []);
+
 
 
   const performSearch = useCallback(async (query: string, newFilters: SearchFilters = {}, page: number = 1, sort: string = 'relevance') => {
-    console.log('🔍 Performing search with query:', query, 'filters:', newFilters, 'page:', page, 'sort:', sort);
+    
     setLoading(true);
     try {
       const offset = (page - 1) * itemsPerPage;
@@ -112,6 +164,65 @@ function SearchPageContent() {
         newFilters.accset.forEach(accset => params.append('accset', accset));
       }
 
+      // Add comprehensive product attribute filters
+      if (newFilters.material?.length) {
+        newFilters.material.forEach(material => params.append('material', material));
+      }
+      if (newFilters.driveDesign?.length) {
+        newFilters.driveDesign.forEach(design => params.append('driveDesign', design));
+      }
+      if (newFilters.bitSizes?.length) {
+        newFilters.bitSizes.forEach(size => params.append('bitSizes', size));
+      }
+      if (newFilters.warranty?.length) {
+        newFilters.warranty.forEach(warranty => params.append('warranty', warranty));
+      }
+      if (newFilters.pieces?.length) {
+        newFilters.pieces.forEach(piece => params.append('pieces', piece));
+      }
+      if (newFilters.hasDiscount?.length) {
+        newFilters.hasDiscount.forEach(discount => params.append('hasDiscount', discount));
+      }
+      if (newFilters.discountPercent?.length) {
+        newFilters.discountPercent.forEach(percent => params.append('discountPercent', percent));
+      }
+      if (newFilters.bitMaterial?.length) {
+        newFilters.bitMaterial.forEach(material => params.append('bitMaterial', material));
+      }
+      if (newFilters.screwdriverBitType?.length) {
+        newFilters.screwdriverBitType.forEach(type => params.append('screwdriverBitType', type));
+      }
+      if (newFilters.drillBitType?.length) {
+        newFilters.drillBitType.forEach(type => params.append('drillBitType', type));
+      }
+      if (newFilters.bitType?.length) {
+        newFilters.bitType.forEach(type => params.append('bitType', type));
+      }
+      if (newFilters.chuckSize?.length) {
+        newFilters.chuckSize.forEach(size => params.append('chuckSize', size));
+      }
+      if (newFilters.shankDiameter?.length) {
+        newFilters.shankDiameter.forEach(diameter => params.append('shankDiameter', diameter));
+      }
+      if (newFilters.assembledWeight?.length) {
+        newFilters.assembledWeight.forEach(weight => params.append('assembledWeight', weight));
+      }
+      if (newFilters.assembledHeight?.length) {
+        newFilters.assembledHeight.forEach(height => params.append('assembledHeight', height));
+      }
+      if (newFilters.assembledWidth?.length) {
+        newFilters.assembledWidth.forEach(width => params.append('assembledWidth', width));
+      }
+      if (newFilters.assembledDepth?.length) {
+        newFilters.assembledDepth.forEach(depth => params.append('assembledDepth', depth));
+      }
+      if (newFilters.vendorName?.length) {
+        newFilters.vendorName.forEach(vendor => params.append('vendorName', vendor));
+      }
+      if (newFilters.units?.length) {
+        newFilters.units.forEach(unit => params.append('units', unit));
+      }
+
       if (newFilters.priceRange?.min !== undefined) {
         params.append('priceMin', newFilters.priceRange.min.toString());
       }
@@ -125,16 +236,16 @@ function SearchPageContent() {
       if (selectedUserId) {
         params.append('userId', selectedUserId);
       }
-      const response = await fetch(`/api/search?${params.toString()}`);
+      const searchUrl = `/api/search?${params.toString()}`;
+      console.log('🔍 Search URL:', searchUrl);
+      const response = await fetch(searchUrl);
       const data = await response.json();
 
-      console.log('API Response:', data); // Debug log
-      console.log('Search result facets:', data.data?.facets); // Debug facets
+      
 
       if (data.success) {
         setSearchResult(data.data);
-        console.log('✅ Search successful, found', data.data.total, 'products');
-        console.log('🔍 Facets received:', data.data.facets);
+            
       } else {
         console.error('❌ Search failed:', data.error);
         setSearchResult(null);
@@ -155,6 +266,7 @@ function SearchPageContent() {
   };
 
   const handleFilterChange = (newFilters: SearchFilters) => {
+    console.log('🔍 Received filter change:', newFilters);
     setFilters(newFilters);
     setCurrentPage(1);
     performSearch(searchQuery, newFilters, 1, sortBy);
@@ -380,12 +492,20 @@ function SearchPageContent() {
               </button>
             </div>
             <div className={`${showFilters ? 'block' : 'hidden'} lg:block`}>
-              <FilterSidebar
-                key={`filters-${searchResult?.total || 0}-${JSON.stringify(searchResult?.facets)}`}
-                facets={searchResult?.facets}
-                filters={filters}
-                onFilterChange={handleFilterChange}
-              />
+              {loadingFilters ? (
+                <div className="flex items-center justify-center py-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                  <span className="ml-2 text-sm text-gray-600">Loading filters...</span>
+                </div>
+              ) : (
+                <FilterSidebar
+                  key={`vertex-filters-${JSON.stringify(allFilters)}`}
+                  facets={allFilters}
+                  filters={filters}
+                  onFilterChange={handleFilterChange}
+                  showAllFilters={true}
+                />
+              )}
             </div>
           </div>
 

@@ -89,7 +89,6 @@ export async function GET(request: NextRequest) {
 
     // If no results from Vertex AI, fall back to local recommendation engine
     if (products.length === 0) {
-      console.log('🔄 No Vertex AI results, falling back to local recommendation engine...');
       try {
         const { recommendationEngine } = await import('@/lib/recommendations');
         const localResult = await recommendationEngine.getSimilarProducts(sku, limit);

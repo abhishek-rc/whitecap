@@ -102,15 +102,6 @@ export async function GET(request: NextRequest) {
       filter = filters.join(' AND ');
     }
 
-    console.log('🔗 Getting similar items recommendations:', {
-      sku,
-      visitorId,
-      limit,
-      categoryFilter,
-      brandFilter,
-      filter
-    });
-
     // Get similar items from Vertex AI using the new similar-items model
     const predictionResponse = await vertexAICommerceService.predict(
       'similar-items',
@@ -118,11 +109,6 @@ export async function GET(request: NextRequest) {
       limit,
       filter
     );
-
-    console.log('📊 Similar items prediction response:', {
-      resultCount: predictionResponse.results?.length || 0,
-      hasResults: !!predictionResponse.results
-    });
 
     // Transform results to our format and exclude the base SKU
     const products = (predictionResponse.results || [])
@@ -188,11 +174,7 @@ export async function GET(request: NextRequest) {
       }
     };
 
-    console.log('✅ Similar items recommendations response:', {
-      baseSku: sku,
-      productCount: products.length,
-      score: responseData.score
-    });
+      
 
     return NextResponse.json(responseData);
 

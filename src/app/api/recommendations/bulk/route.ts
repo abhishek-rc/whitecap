@@ -69,7 +69,6 @@ export async function GET(request: NextRequest) {
               .then(async data => {
                 // If no results and we had filters, try without filters
                 if (data.count === 0 && (categoryFilter || brandFilter)) {
-                  console.log('🔄 No similar-items found with filters, trying without filters...');
                   const fallbackRes = await fetch(`${baseUrl}/api/recommendations/similar-items?sku=${productSku}&limit=${limit}&visitorId=${visitorId}`, {
                     headers: { 'User-Agent': 'bulk-api-fallback' }
                   });
@@ -92,7 +91,6 @@ export async function GET(request: NextRequest) {
               .then(async data => {
                 // If no results and we had filters, try without filters
                 if (data.count === 0 && (categoryFilter || brandFilter)) {
-                  console.log('🔄 No on-sale found with filters, trying without filters...');
                   const fallbackRes = await fetch(`${baseUrl}/api/recommendations/on-sale?limit=${limit}&visitorId=${visitorId}`, {
                     headers: { 'User-Agent': 'bulk-api-fallback' }
                   });
@@ -115,7 +113,6 @@ export async function GET(request: NextRequest) {
               .then(async data => {
                 // If no results from trending, try getting popular similar items
                 if ((!data.recommendations || data.recommendations.length === 0)) {
-                  console.log('🔄 No trending found, using similar-items as fallback...');
                   const fallbackRes = await fetch(`${baseUrl}/api/recommendations/similar-items?sku=${productSku}&limit=${limit}&visitorId=${visitorId}`, {
                     headers: { 'User-Agent': 'bulk-api-trending-fallback' }
                   });
@@ -148,7 +145,6 @@ export async function GET(request: NextRequest) {
               .then(async data => {
                 // If no results and we had filters, try without filters
                 if (data.count === 0 && (categoryFilter || brandFilter)) {
-                  console.log('🔄 No recommended-for-you found with filters, trying without filters...');
                   const fallbackRes = await fetch(`${baseUrl}/api/recommendations/recommended-for-you?limit=${limit}&visitorId=${visitorId}&userId=${searchParams.get('userId') || ''}`, {
                     headers: { 'User-Agent': 'bulk-api-fallback' }
                   });
@@ -268,7 +264,7 @@ export async function GET(request: NextRequest) {
       }
     };
 
-    console.log(`Bulk recommendations completed in ${Date.now() - startTime}ms`);
+
     return NextResponse.json(response);
 
   } catch (error) {

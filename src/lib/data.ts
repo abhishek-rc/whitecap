@@ -68,6 +68,26 @@ export interface SearchFilters {
   accset?: string[];
   warehouse?: string[];
   sortBy?: string;
+  // Comprehensive product attribute filters
+  material?: string[];
+  driveDesign?: string[];
+  bitSizes?: string[];
+  warranty?: string[];
+  pieces?: string[];
+  hasDiscount?: string[];
+  discountPercent?: string[];
+  bitMaterial?: string[];
+  screwdriverBitType?: string[];
+  drillBitType?: string[];
+  bitType?: string[];
+  chuckSize?: string[];
+  shankDiameter?: string[];
+  assembledWeight?: string[];
+  assembledHeight?: string[];
+  assembledWidth?: string[];
+  assembledDepth?: string[];
+  vendorName?: string[];
+  units?: string[];
 }
 
 export interface SearchResult {

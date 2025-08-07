@@ -1,13 +1,44 @@
 
-> vertex-ai-search-nextjs@0.1.0 dev
+> whitecap-vertex-ai-search@0.1.0 dev
 > next dev --turbopack
 
  ⚠ Port 3000 is in use, using available port 3001 instead.
    ▲ Next.js 15.3.5 (Turbopack)
    - Local:        http://localhost:3001
-   - Network:      http://192.168.1.11:3001
+   - Network:      http://192.168.1.10:3001
    - Environments: .env.local, .env
 
  ✓ Starting...
- ✓ Ready in 10.1s
+ ✓ Ready in 11.7s
+ ○ Compiling /api/search ...
+ ✓ Compiled /api/search in 3.4s
+🚀 Initializing VertexAICommerceService...
+📊 Environment variables: {
+  PROJECT_ID: 'whitecap-us',
+  LOCATION: 'global',
+  CATALOG_ID: 'default_catalog',
+  BRANCH_ID: '0',
+  hasCredentials: true,
+  credentialsLength: 29,
+  nodeEnv: 'development',
+  isVercel: false,
+  credentialsPreview: './whitecap-us-vertex-key.json...'
+}
+🔑 Configuring authentication...
+📝 Using file path credentials
+✅ Credentials file found at: C:\Users\TahsinRaza\Desktop\vertex-ai-search-nextjs\whitecap-us-vertex-key.json
+✅ Authentication configured successfully
+📍 Service paths configured: {
+  projectPath: 'projects/whitecap-us',
+  catalogPath: 'projects/whitecap-us/locations/global/catalogs/default_catalog',
+  branchPath: 'projects/whitecap-us/locations/global/catalogs/default_catalog/branches/0'
+}
+✅ VertexAICommerceService initialized successfully
+ POST /api/search 405 in 3734ms
+ ✓ Compiled /api/health in 329ms
+✅ Loaded 0 products from C:\Users\TahsinRaza\Desktop\vertex-ai-search-nextjs\Productextract.csv
+✅ Loaded 0 stock records from C:\Users\TahsinRaza\Desktop\vertex-ai-search-nextjs\Stockextract.csv
+✅ Sample allergen data populated for 0 products
+🚀 Data service initialized with 0 products and 0 stock records
+ GET /api/health 200 in 1111ms
 ^C

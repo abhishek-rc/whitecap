@@ -15,6 +15,27 @@ export async function GET(request: NextRequest) {
   const availabilities = searchParams.getAll('availability');
   const warehouses = searchParams.getAll('warehouse');
   const accsets = searchParams.getAll('accset');
+  
+  // Comprehensive product attribute filters
+  const materials = searchParams.getAll('material');
+  const driveDesigns = searchParams.getAll('driveDesign');
+  const bitSizes = searchParams.getAll('bitSizes');
+  const warranties = searchParams.getAll('warranty');
+  const pieces = searchParams.getAll('pieces');
+  const hasDiscounts = searchParams.getAll('hasDiscount');
+  const discountPercents = searchParams.getAll('discountPercent');
+  const bitMaterials = searchParams.getAll('bitMaterial');
+  const screwdriverBitTypes = searchParams.getAll('screwdriverBitType');
+  const drillBitTypes = searchParams.getAll('drillBitType');
+  const bitTypes = searchParams.getAll('bitType');
+  const chuckSizes = searchParams.getAll('chuckSize');
+  const shankDiameters = searchParams.getAll('shankDiameter');
+  const assembledWeights = searchParams.getAll('assembledWeight');
+  const assembledHeights = searchParams.getAll('assembledHeight');
+  const assembledWidths = searchParams.getAll('assembledWidth');
+  const assembledDepths = searchParams.getAll('assembledDepth');
+  const vendorNames = searchParams.getAll('vendorName');
+  const units = searchParams.getAll('units');
 
   const priceMin = searchParams.get('priceMin') ? parseFloat(searchParams.get('priceMin')!) : undefined;
   const priceMax = searchParams.get('priceMax') ? parseFloat(searchParams.get('priceMax')!) : undefined;
@@ -35,6 +56,26 @@ export async function GET(request: NextRequest) {
       availability: availabilities.join(','),
       warehouse: warehouses.join(','),
       accset: accsets.join(','),
+      // Comprehensive filters for cache key
+      material: materials.join(','),
+      driveDesign: driveDesigns.join(','),
+      bitSizes: bitSizes.join(','),
+      warranty: warranties.join(','),
+      pieces: pieces.join(','),
+      hasDiscount: hasDiscounts.join(','),
+      discountPercent: discountPercents.join(','),
+      bitMaterial: bitMaterials.join(','),
+      screwdriverBitType: screwdriverBitTypes.join(','),
+      drillBitType: drillBitTypes.join(','),
+      bitType: bitTypes.join(','),
+      chuckSize: chuckSizes.join(','),
+      shankDiameter: shankDiameters.join(','),
+      assembledWeight: assembledWeights.join(','),
+      assembledHeight: assembledHeights.join(','),
+      assembledWidth: assembledWidths.join(','),
+      assembledDepth: assembledDepths.join(','),
+      vendorName: vendorNames.join(','),
+      units: units.join(','),
       priceMin,
       priceMax,
       sortBy
@@ -43,7 +84,6 @@ export async function GET(request: NextRequest) {
     // Check cache first
     const cachedResult = cache.get(cacheKey);
     if (cachedResult) {
-      console.log('🎯 Cache hit for search query:', query);
       return NextResponse.json({
         success: true,
         data: cachedResult,
@@ -64,10 +104,45 @@ export async function GET(request: NextRequest) {
       filters.priceRange = { min: priceMin, max: priceMax };
     }
 
+    // Add comprehensive product attribute filters
+    if (materials.length > 0) filters.material = materials;
+    if (driveDesigns.length > 0) filters.driveDesign = driveDesigns;
+    if (bitSizes.length > 0) filters.bitSizes = bitSizes;
+    if (warranties.length > 0) filters.warranty = warranties;
+    if (pieces.length > 0) filters.pieces = pieces;
+    if (hasDiscounts.length > 0) filters.hasDiscount = hasDiscounts;
+    if (discountPercents.length > 0) filters.discountPercent = discountPercents;
+    if (bitMaterials.length > 0) filters.bitMaterial = bitMaterials;
+    if (screwdriverBitTypes.length > 0) filters.screwdriverBitType = screwdriverBitTypes;
+    if (drillBitTypes.length > 0) filters.drillBitType = drillBitTypes;
+    if (bitTypes.length > 0) filters.bitType = bitTypes;
+    if (chuckSizes.length > 0) filters.chuckSize = chuckSizes;
+    if (shankDiameters.length > 0) filters.shankDiameter = shankDiameters;
+    if (assembledWeights.length > 0) filters.assembledWeight = assembledWeights;
+    if (assembledHeights.length > 0) filters.assembledHeight = assembledHeights;
+    if (assembledWidths.length > 0) filters.assembledWidth = assembledWidths;
+    if (assembledDepths.length > 0) filters.assembledDepth = assembledDepths;
+    if (vendorNames.length > 0) filters.vendorName = vendorNames;
+    if (units.length > 0) filters.units = units;
+
     // **PRIMARY STRATEGY: Vertex AI Search**
-    console.log('🚀 Starting Vertex AI search for:', query);
     const startTime = Date.now();
     
+    // Debug URL parameters
+    console.log('🔍 URL Parameters Debug:');
+    console.log('  - query:', query);
+    console.log('  - categories:', categories);
+    console.log('  - brands:', brands);
+    console.log('  - materials:', materials);
+    console.log('  - availabilities:', availabilities);
+    console.log('  - warehouses:', warehouses);
+    console.log('  - accsets:', accsets);
+    console.log('  - warranties:', warranties);
+    console.log('  - hasDiscounts:', hasDiscounts);
+    console.log('  - discountPercents:', discountPercents);
+    console.log('  - All searchParams:', Object.fromEntries(searchParams.entries()));
+    
+    console.log('🔍 Filters object passed to buildFilter:', JSON.stringify(filters, null, 2));
     const filter = vertexAICommerceService.buildFilter(filters);
     let orderBy = '';
     switch (sortBy) {
@@ -121,14 +196,6 @@ export async function GET(request: NextRequest) {
         setTimeout(() => reject(new Error('Vertex AI timeout')), 15000); // 15 second timeout
       });
 
-      console.log('🔍 Making Vertex AI search request with:', {
-        query: query || '',
-        visitorId,
-        pageSize: limit,
-        offset: offset,
-        filter,
-        orderBy
-      });
 
       const searchPromise = vertexAICommerceService.search({
         query: exact ? `"${query}"` : (query || ''), // Use exact match with quotes if exact=true
@@ -138,47 +205,56 @@ export async function GET(request: NextRequest) {
         offset: offset,
         filter,
         orderBy,
+        // Try both specific facets AND dynamic facets to see what works
         facetSpecs: [
           { facetKey: { key: 'attributes.brand' }, limit: 20 },
           { facetKey: { key: 'categories' }, limit: 20 },
-          { facetKey: { key: 'availability' }, limit: 4 },
-          { facetKey: { key: 'attributes.vendor' }, limit: 20 },
-          { facetKey: { key: 'attributes.vendorName' }, limit: 20 },
-          { facetKey: { key: 'attributes.accset' }, limit: 20 },
-          { facetKey: { key: 'priceInfo.price' }, limit: 10 }
-        ]
+          { facetKey: { key: 'availability' }, limit: 4 }
+        ],
+        // Also enable dynamic facets
+        dynamicFacetSpec: {
+          mode: 'ENABLED'
+        }
       });
 
       const searchResponse = await Promise.race([searchPromise, timeoutPromise]);
       
-      console.log('✅ Vertex AI search response:', {
-        totalSize: searchResponse.totalSize,
-        resultsCount: searchResponse.results?.length || 0,
-        facetsCount: searchResponse.facets?.length || 0,
-        nextPageToken: searchResponse.nextPageToken
-      });
-
       // Debug facets
+      console.log('🔍 Facets Debug Information:');
+      console.log(`   - searchResponse.facets exists: ${!!searchResponse.facets}`);
+      console.log(`   - searchResponse.facets type: ${typeof searchResponse.facets}`);
+      console.log(`   - searchResponse.facets array: ${Array.isArray(searchResponse.facets)}`);
       if (searchResponse.facets) {
-        console.log('🔍 Available facets:', searchResponse.facets.map(f => ({ key: f.key, valueCount: f.values?.length || 0 })));
-        searchResponse.facets.forEach(facet => {
-          console.log(`📊 Facet "${facet.key}":`, facet.values?.slice(0, 3));
+        console.log(`   - searchResponse.facets length: ${searchResponse.facets.length}`);
+        console.log(`   - searchResponse.facets content:`, JSON.stringify(searchResponse.facets, null, 2));
+      }
+      
+      if (searchResponse.facets && searchResponse.facets.length > 0) {
+        console.log('✅ Vertex AI returned facets!');
+        console.log(`🎯 Facet count: ${searchResponse.facets.length}`);
+        searchResponse.facets.forEach((facet: any, index: number) => {
+          console.log(`   ${index + 1}. ${facet.key}: ${facet.values?.length || 0} values`);
+          if (facet.values && facet.values.length > 0) {
+            console.log(`      Sample values: ${facet.values.slice(0, 3).map((v: any) => `${v.value} (${v.count})`).join(', ')}`);
+          }
         });
+      } else {
+        console.log('❌ No facets returned by Vertex AI');
+        console.log('Response keys:', Object.keys(searchResponse));
       }
 
       if (searchResponse.results && searchResponse.results.length > 0) {
-        console.log('📦 First result sample:', JSON.stringify(searchResponse.results[0], null, 2));
+        console.log(`📦 Search results: ${searchResponse.results.length} products`);
+        console.log(`📈 Total available: ${searchResponse.totalSize || 0} products`);
       }
       
       // Get full product details for each result
       const productIds = (searchResponse.results || []).map((result: any) => result.id);
-      console.log(`🔍 Fetching full product details for ${productIds.length} products`);
       
       const fullProducts = await vertexAICommerceService.getProducts(productIds);
-      console.log(`✅ Retrieved ${fullProducts.length} full product details`);
       
       if (fullProducts.length > 0) {
-        console.log(`📦 First full product sample:`, JSON.stringify(fullProducts[0], null, 2));
+
       }
 
       // Map full product data to our format
@@ -319,21 +395,183 @@ export async function GET(request: NextRequest) {
 
       // Check if Vertex AI provided facets, if not generate them from products
       const hasFacets = searchResponse.facets && searchResponse.facets.length > 0;
-      console.log(`📊 Vertex AI facets available: ${hasFacets}, generating from products: ${!hasFacets}`);
       
-      const facets = hasFacets ? {
-        categories: searchResponse.facets?.find(f => f.key === 'categories')?.values?.map((v: any) => ({ value: v.value, count: v.count })) || [],
-        brands: searchResponse.facets?.find(f => f.key === 'attributes.brand')?.values?.map((v: any) => ({ value: v.value, count: v.count })) || [],
-        availability: searchResponse.facets?.find(f => f.key === 'availability')?.values?.map((v: any) => ({ value: v.value, count: v.count })) || [],
-        accsets: searchResponse.facets?.find(f => f.key === 'attributes.accset')?.values?.map((v: any) => ({ value: v.value, count: v.count })) || [],
-        warehouses: searchResponse.facets?.find(f => f.key === 'attributes.vendor')?.values?.map((v: any) => ({ value: v.value, count: v.count })) || 
-                   searchResponse.facets?.find(f => f.key === 'attributes.vendorName')?.values?.map((v: any) => ({ value: v.value, count: v.count })) || []
-      } : generateFacetsFromProducts(products);
+      // Enhanced facet mapping with comprehensive dynamic facet support
+      const mapVertexFacetsToOurFormat = (vertexFacets: any[]) => {
+        const facets: any = {
+          categories: [],
+          brands: [],
+          availability: [],
+          accsets: [],
+          warehouses: [],
+          // Extended comprehensive facets
+          materials: [],
+          driveDesign: [],
+          bitSizes: [],
+          warranty: [],
+          pieces: [],
+          hasDiscount: [],
+          discountPercent: [],
+          bitMaterial: [],
+          screwdriverBitType: [],
+          drillBitType: [],
+          bitType: [],
+          chuckSize: [],
+          shankDiameter: [],
+          assembledWeight: [],
+          assembledHeight: [],
+          assembledWidth: [],
+          assembledDepth: [],
+          vendorName: [],
+          units: []
+        };
+
+        // Log all available facets from Vertex AI for debugging
+        console.log('🔍 Available Vertex AI Facets:', vertexFacets.map(f => ({ key: f.key, valueCount: f.values?.length })));
+
+        // Map each facet from Vertex AI to our format
+        vertexFacets.forEach((facet: any) => {
+          const key = facet.key;
+          const values = facet.values?.map((v: any) => ({ value: v.value, count: v.count })) || [];
+          
+          // Map based on facet key patterns
+          switch (key) {
+            case 'categories':
+            case 'category':
+              facets.categories = values;
+              break;
+            case 'attributes.brand':
+            case 'attributes.brand.text':
+            case 'brand':
+              facets.brands = values;
+              break;
+            case 'availability':
+              facets.availability = values;
+              break;
+            case 'attributes.accset':
+            case 'accset':
+              facets.accsets = values;
+              break;
+            case 'attributes.vendor':
+            case 'attributes.vendor.text':
+            case 'attributes.vendorName':
+            case 'vendorName':
+            case 'vendor':
+              facets.warehouses = values;
+              break;
+            // Material facets
+            case 'attributes.cs_material.text':
+            case 'attributes.cs_material':
+            case 'attributes.ga_material.text':
+            case 'attributes.ga_material':
+            case 'attributes.material.text':
+            case 'material':
+              facets.materials = [...facets.materials, ...values];
+              break;
+            // Drive design
+            case 'attributes.cs_drive_design.text':
+            case 'attributes.ga_drive_design.text':
+            case 'driveDesign':
+              facets.driveDesign = values;
+              break;
+            // Bit materials
+            case 'attributes.cs_bit_material.text':
+            case 'attributes.ga_bit_material.text':
+            case 'bitMaterial':
+              facets.bitMaterial = values;
+              break;
+            // Bit types
+            case 'attributes.cs_bit_type.text':
+            case 'attributes.ga_bit_type.text':
+            case 'bitType':
+              facets.bitType = values;
+              break;
+            // Chuck size
+            case 'attributes.cs_chuck_size.text':
+            case 'attributes.ga_chuck_size.text':
+            case 'chuckSize':
+              facets.chuckSize = values;
+              break;
+            // Warranty
+            case 'attributes.ga_warranty.text':
+            case 'attributes.ga_warranty':
+            case 'warranty':
+              facets.warranty = values;
+              break;
+            // Discount info
+            case 'attributes.hasDiscount.text':
+            case 'attributes.hasDiscount':
+            case 'hasDiscount':
+              facets.hasDiscount = values;
+              break;
+            case 'attributes.discountPercent.numbers':
+            case 'attributes.discountPercent':
+            case 'discountPercent':
+              facets.discountPercent = values;
+              break;
+            // Physical dimensions
+            case 'attributes.assembledWeight.text':
+              facets.assembledWeight = values;
+              break;
+            case 'attributes.assembledHeight.text':
+              facets.assembledHeight = values;
+              break;
+            case 'attributes.assembledWidth.text':
+              facets.assembledWidth = values;
+              break;
+            case 'attributes.assembledDepth.text':
+              facets.assembledDepth = values;
+              break;
+            // Units
+            case 'units':
+              facets.units = values;
+              break;
+            // Shank diameter
+            case 'attributes.cs_shank_diameter.text':
+              facets.shankDiameter = values;
+              break;
+            // Color facets  
+            case 'attributes.cs_color':
+            case 'attributes.cs_color.text':
+            case 'color':
+              // Map colors to bitSizes for now (temporary)
+              facets.bitSizes = values;
+              break;
+            default:
+              // For any unrecognized facets, try to map them to a reasonable category
+              console.log(`🤔 Unmapped facet key: ${key} with ${values.length} values`);
+              break;
+          }
+        });
+
+        // Deduplicate and sort facets
+        Object.keys(facets).forEach(key => {
+          if (Array.isArray(facets[key])) {
+            // Remove duplicates and sort by count (desc) then by value (asc)
+            const uniqueValues = new Map();
+            facets[key].forEach((item: any) => {
+              if (uniqueValues.has(item.value)) {
+                uniqueValues.set(item.value, {
+                  value: item.value,
+                  count: uniqueValues.get(item.value).count + item.count
+                });
+              } else {
+                uniqueValues.set(item.value, item);
+              }
+            });
+            facets[key] = Array.from(uniqueValues.values())
+              .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value));
+          }
+        });
+
+        return facets;
+      };
+      
+      const facets = hasFacets ? mapVertexFacetsToOurFormat(searchResponse.facets) : generateFacetsFromProducts(products);
 
       // Apply post-processing sorting for unsupported Vertex AI sorts or textual fields
       if (sortBy === 'availability' || sortBy === 'text_match_desc' || sortBy === 'recently_purchased' || sortBy === 'rating_desc' || sortBy === 'rating_asc') {
-        console.log(`🔄 Applying post-processing sort: ${sortBy}`);
-        
+            
         // Helper functions for rating sorts
         const getRatingValue = (product: any) => {
           if (typeof product.rating === 'number') {

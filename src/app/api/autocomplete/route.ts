@@ -37,7 +37,6 @@ function loadSuggestionsFromCSV(): string[] {
     csvSuggestions = suggestions;
     csvLoadTime = now;
     
-    console.log(`📁 Loaded ${suggestions.length} suggestions from CSV file`);
     return suggestions;
   } catch (error) {
     console.error('Error loading CSV suggestions:', error);
@@ -60,15 +59,7 @@ function loadSuggestionsFromCSV(): string[] {
 function getLocalSuggestions(query: string, maxSuggestions: number) {
   const lowerQuery = query.toLowerCase().trim();
   
-  console.log('🔍 Local suggestions debug:', {
-    originalQuery: query,
-    lowerQuery,
-    queryLength: lowerQuery.length,
-    maxSuggestions
-  });
-  
   if (lowerQuery.length < 2) {
-    console.log('❌ Query too short, returning empty array');
     return [];
   }
   
@@ -84,13 +75,7 @@ function getLocalSuggestions(query: string, maxSuggestions: number) {
     suggestion.toLowerCase().includes(lowerQuery) && 
     !suggestion.toLowerCase().startsWith(lowerQuery)
   );
-  
-  console.log('🔍 Local suggestions matching:', {
-    startsWith: startsWith.length,
-    contains: contains.length,
-    startsWithItems: startsWith,
-    containsItems: contains
-  });
+
   
   // Combine and limit results
   const combined = [...startsWith, ...contains]
@@ -100,7 +85,6 @@ function getLocalSuggestions(query: string, maxSuggestions: number) {
       type: 'query' as const
     }));
   
-  console.log('✅ Local suggestions result:', combined);
   return combined;
 }
 
@@ -124,7 +108,6 @@ export async function GET(request: NextRequest) {
     }
 
     // **PRIMARY STRATEGY: Vertex AI Autocomplete**
-    console.log('🚀 Starting Vertex AI autocomplete for:', query);
 
     // Set timeout for autocomplete
     const timeoutPromise = new Promise<never>((_, reject) => {
@@ -147,7 +130,6 @@ export async function GET(request: NextRequest) {
 
     // If Vertex AI returns empty suggestions, use local fallback
     if (vertexSuggestions.length === 0) {
-      console.log('🔄 Vertex AI returned empty suggestions, using local fallback for:', query);
       const localSuggestions = getLocalSuggestions(query, maxSuggestions);
       
       const fallbackResponse = {
@@ -182,7 +164,6 @@ export async function GET(request: NextRequest) {
     const query = searchParams.get('q') || '';
     const maxSuggestions = parseInt(searchParams.get('limit') || '8');
     
-    console.log('🔄 Vertex AI failed, using local fallback for:', query);
     const localSuggestions = getLocalSuggestions(query, maxSuggestions);
     
     return NextResponse.json({

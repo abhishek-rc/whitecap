@@ -76,14 +76,7 @@ export async function GET(request: NextRequest) {
       filter = filters.join(' AND ');
     }
 
-    console.log('✨ Getting recommended-for-you recommendations:', {
-      visitorId,
-      userId,
-      limit,
-      categoryFilter,
-      brandFilter,
-      filter
-    });
+
 
     // Get recommended-for-you products from Vertex AI using the recommended-for-you model
     const predictionResponse = await vertexAICommerceService.predict(
@@ -93,10 +86,7 @@ export async function GET(request: NextRequest) {
       filter
     );
 
-    console.log('📊 Recommended-for-you prediction response:', {
-      resultCount: predictionResponse.results?.length || 0,
-      hasResults: !!predictionResponse.results
-    });
+
 
     // Transform results to our format
     const products = (predictionResponse.results || []).map((result: VertexAIResult) => {
@@ -162,11 +152,7 @@ export async function GET(request: NextRequest) {
       }
     };
 
-    console.log('✅ Recommended-for-you recommendations response:', {
-      productCount: products.length,
-      score: responseData.score,
-      userId: userId
-    });
+    
 
     return NextResponse.json(responseData);
 

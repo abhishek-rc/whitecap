@@ -42,26 +42,14 @@ export default function RecommendationsWidget({
   visitorId = 'widget-user',
   userId
 }: RecommendationsWidgetProps) {
-  console.log('🎨 RecommendationsWidget rendered with props:', {
-    productSku,
-    categories,
-    limit,
-    className
-  });
-
+  
   const [recommendations, setRecommendations] = useState<RecommendationsData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log('🔥 RecommendationsWidget - useEffect triggered', {
-      productSku,
-      categories,
-      limit
-    });
 
     const makeDirectFetch = async () => {
-      console.log('🚀 fetchRecommendations called (direct)', { productSku, categories, limit });
       
       setLoading(true);
       setError(null);
@@ -89,7 +77,6 @@ export default function RecommendationsWidget({
         }
 
         const url = `/api/recommendations/bulk?${searchParams.toString()}`;
-        console.log('🌐 About to fetch (direct):', url);
 
         const response = await fetch(url, {
           method: 'GET',
@@ -98,40 +85,25 @@ export default function RecommendationsWidget({
           },
         });
 
-        console.log('📡 Response received (direct):', response.status, response.statusText);
 
         const data = await response.json();
 
-        console.log('🎯 RecommendationsWidget - API Response (direct):', {
-          success: data.success,
-          totalTypes: data.data?.totalTypes,
-          totalProducts: data.data?.totalProducts,
-          recommendationKeys: Object.keys(data.data?.recommendations || {}),
-          fullData: data
-        });
+
 
         if (data.success) {
           const recommendationsData = data.data.recommendations;
-          console.log('✅ RecommendationsWidget - About to set state with (direct):', {
-            recommendationsData,
-            hasData: !!recommendationsData,
-            keys: recommendationsData ? Object.keys(recommendationsData) : [],
-            similarItemsProducts: recommendationsData?.['similar-items']?.products?.length || 0,
-            onSaleProducts: recommendationsData?.['on-sale']?.products?.length || 0
-          });
+
           
           setRecommendations(recommendationsData);
           
           // Force a small delay to ensure state is set
           setTimeout(() => {
-            console.log('✅ RecommendationsWidget - State after timeout:', recommendationsData);
           }, 100);
         } else {
           setError(data.error || 'Failed to fetch recommendations');
         }
       } catch (err) {
         setError('Network error while fetching recommendations');
-        console.error('❌ Recommendations fetch error (direct):', err);
       } finally {
         setLoading(false);
       }
@@ -141,13 +113,7 @@ export default function RecommendationsWidget({
   }, [productSku, categories, limit, visitorId, userId]);
 
   // Debug render state
-  console.log('🎨 RecommendationsWidget - Current render state:', {
-    loading,
-    error,
-    hasRecommendations: !!recommendations,
-    recommendationsKeys: recommendations ? Object.keys(recommendations) : [],
-    recommendationsObject: recommendations
-  });
+
 
   const RecommendationSection = ({ 
     title, 
@@ -176,7 +142,6 @@ export default function RecommendationsWidget({
       <p className="text-sm text-gray-600 mb-4 italic">💡 {reason}</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4">
         {products && Array.isArray(products) && products.slice(0, 4).map((product, index) => {
-          console.log(`Rendering product ${index}:`, product);
           return <ProductCard key={product.id} product={product} />;
         })}
       </div>
@@ -232,15 +197,7 @@ export default function RecommendationsWidget({
   }
 
   if (!recommendations || Object.keys(recommendations).length === 0) {
-    console.log('🚫 RecommendationsWidget - No recommendations to show:', {
-      recommendations,
-      hasRecommendations: !!recommendations,
-      keyCount: recommendations ? Object.keys(recommendations).length : 0,
-      loading,
-      error,
-      recommendationsType: typeof recommendations,
-      recommendationsStringified: JSON.stringify(recommendations)
-    });
+    
     
     return (
       <div className={`${className} bg-white rounded-lg shadow-sm border border-gray-200 p-6`}>

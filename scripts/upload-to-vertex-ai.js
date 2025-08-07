@@ -99,16 +99,17 @@ class VertexAIDataUploader {
     if (productData.WEBSUBCATEG__c) categories.push(productData.WEBSUBCATEG__c);
 
     // Generate realistic random pricing with discount
+    // Ensures enough sale items for Vertex AI model requirements
     const generatePricingWithDiscount = () => {
       // Generate base price between $10 and $150
       const basePrice = Math.round((Math.random() * 140 + 10) * 100) / 100;
       
-      // 70% chance of having a discount
-      const hasDiscount = Math.random() < 0.7;
+      // 80% chance of having a discount to ensure enough sale items
+      const hasDiscount = Math.random() < 0.8;
       
       if (hasDiscount) {
-        // Discount between 10% and 40%
-        const discountPercent = Math.random() * 0.3 + 0.1; // 10% to 40%
+        // Discount between 15% and 50%
+        const discountPercent = Math.random() * 0.35 + 0.15; // 15% to 50%
         const salePrice = Math.round(basePrice * (1 - discountPercent) * 100) / 100;
         
         return {
@@ -439,7 +440,7 @@ console.log(`Creating catalog at ${url}...`);
 
       // Step 3: Read processed JSON file
       console.log('📖 Reading processed Whitecap data...');
-      const jsonDataPath = path.join(__dirname, '..', 'whitecap-vertex-ai-products.json');
+      const jsonDataPath = path.join(__dirname, '..', 'whitecap-vertex-ai-products-with-categories.json');
 
       if (!fs.existsSync(jsonDataPath)) {
         throw new Error(`Processed data file not found: ${jsonDataPath}. Please run 'node scripts/process-whitecap-data.js' first.`);
