@@ -24,13 +24,14 @@ export async function GET(request: NextRequest) {
     // Use the same approach as the search page - call our own search API internally
     // This ensures we get the same facets format and logic
     const searchTerms = ['milwaukee', 'tool', 'power', 'equipment', 'drill'];
-    let allFilters = {
+    const allFilters = {
       categories: new Map(),
       brands: new Map(),
       availability: new Map(),
       warehouses: new Map(),
       accsets: new Map(),
       // Add comprehensive filters for all product attributes
+      attributesCategory: new Map(),
       materials: new Map(),
       driveDesign: new Map(),
       bitSizes: new Map(),
@@ -146,6 +147,7 @@ export async function GET(request: NextRequest) {
               };
 
               // Extract comprehensive attributes
+              if (attrs.category?.text) addToFilter(allFilters.attributesCategory, attrs.category.text);
               if (attrs.cs_material?.text) addToFilter(allFilters.materials, attrs.cs_material.text);
               if (attrs.ga_material?.text) addToFilter(allFilters.materials, attrs.ga_material.text);
               if (attrs.cs_drive_design?.text) addToFilter(allFilters.driveDesign, attrs.cs_drive_design.text);
@@ -199,6 +201,7 @@ export async function GET(request: NextRequest) {
       accsets: Array.from(allFilters.accsets.values()).sort((a, b) => b.count - a.count),
       
       // Comprehensive product attribute filters
+      attributesCategory: Array.from(allFilters.attributesCategory.values()).sort((a, b) => b.count - a.count),
       materials: Array.from(allFilters.materials.values()).sort((a, b) => b.count - a.count),
       driveDesign: Array.from(allFilters.driveDesign.values()).sort((a, b) => b.count - a.count),
       bitSizes: Array.from(allFilters.bitSizes.values()).sort((a, b) => b.count - a.count),
@@ -261,6 +264,11 @@ export async function GET(request: NextRequest) {
       availability: [
         { value: 'Available', count: 0 },
         { value: 'Not Available', count: 0 }
+      ],
+      attributesCategory: [
+        { value: 'Hand Tools', count: 0 },
+        { value: 'Power Tools and Equipment', count: 0 },
+        { value: 'Anchoring and Fasteners', count: 0 }
       ],
       priceRanges: [],
       warehouses: [],

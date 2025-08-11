@@ -53,9 +53,9 @@ export async function GET(request: NextRequest) {
       }]
     };
 
-    // Get complementary products from Vertex AI
+    // Get complementary products from Vertex AI using the new freq-bought-together model
     const predictionResponse = await vertexAICommerceService.predict(
-      'others_you_may_like_default',
+      'freq-bought-together', // Working: v5-freq-bo_frequently_1754470790176
       userEvent,
       limit
     );
@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
       isDeleted: false,
       webCategory: result.metadata?.categories?.[0] || '',
       score: result.metadata?.score || 0.7,
-      reason: 'Complementary products from Vertex AI'
+      reason: 'Frequently bought together products from Vertex AI'
     }));
 
     // If no results from Vertex AI, fall back to local recommendation engine
@@ -125,7 +125,7 @@ export async function GET(request: NextRequest) {
           score: localResult.score,
           reason: 'Complementary products from local engine (Vertex AI fallback)',
           count: localProducts.length,
-          type: 'complementary'
+          type: 'frequently-bought-together'
         });
       } catch (fallbackError) {
         console.error('❌ Local fallback also failed:', fallbackError);
@@ -135,9 +135,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       products,
       score: products.length > 0 ? 0.7 : 0,
-      reason: products.length > 0 ? 'Complementary products from Vertex AI' : 'No complementary products found',
+      reason: products.length > 0 ? 'Frequently bought together products from Vertex AI' : 'No frequently bought together products found',
       count: products.length,
-      type: 'complementary'
+      type: 'frequently-bought-together'
     });
 
   } catch (error) {

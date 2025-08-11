@@ -41,13 +41,17 @@ export async function GET(request: NextRequest) {
       filter = `categories: ANY("${categoryFilter}")`;
     }
 
+    // TEMPORARILY DISABLED: Model not yet trained in new GCP project
     // Get trending products from Vertex AI
-    const predictionResponse = await vertexAICommerceService.predict(
-      'most_popular_items_default',
-      userEvent,
-      limit,
-      filter
-    );
+    // const predictionResponse = await vertexAICommerceService.predict(
+    //   'most_popular_items_default',
+    //   userEvent,
+    //   limit,
+    //   filter
+    // );
+
+    // Return empty result until model is trained
+    const predictionResponse = { results: [] };
 
     // Transform results to our format
     const products = (predictionResponse.results || []).map((result: VertexAIResult) => ({

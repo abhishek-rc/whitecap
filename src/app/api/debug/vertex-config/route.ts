@@ -31,8 +31,18 @@ export async function GET() {
       }]
     };
 
-    // Try different placement calls
-    const testPlacements = ['similar-items', 'most_popular_items_default', 'trending', 'recently_viewed_default'];
+    // Try working placement models only
+    const testPlacements = [
+      'similar-items', // Working: similar-it_similar-it_1753884121346
+      'freq-bought-together', // Working: v5-freq-bo_frequently_1754470790176  
+      'buy-it-again', // Working: v3-buy-it-_buy-it-aga_1754470934568
+      
+      // Commented out non-working models - will test when they get trained
+      // 'most_popular_items_default',
+      // 'trending', 
+      // 'recently_viewed_default',
+      // 'recommended_for_you_default'
+    ];
     const placementResults: Record<string, unknown> = {};
 
     for (const placement of testPlacements) {
