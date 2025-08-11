@@ -24,7 +24,6 @@ interface RecommendationSection {
 interface RecommendationsData {
   trending?: RecommendationSection;
   'on-sale'?: RecommendationSection;
-  'similar-items'?: RecommendationSection;
   'recommended-for-you'?: RecommendationSection;
 }
 
@@ -67,7 +66,7 @@ export default function Home() {
     try {
       const visitorId = getCurrentVisitorId(selectedUserId);
       const params = new URLSearchParams({
-        models: 'trending,on-sale,similar-items,recommended-for-you',
+        models: 'trending,on-sale,recommended-for-you', // Simplified to 3 working models
         limit: '8',
         visitorId: visitorId,
       });
@@ -445,7 +444,9 @@ export default function Home() {
             </div>
           </div>
         </div> */}
+        <Link href="/search" className="block">
         <img className="" loading="eager" src="https://d2ou5j4j4yi9kl.cloudfront.net/userfiles/homepage/hurricane%20readiness_response_desktop.webp" alt="Hurricane Readiness and Response" width="1800" height="430"></img>
+        </Link>
       </section>
 
       {/* Product Categories */}
@@ -625,73 +626,50 @@ export default function Home() {
                 </div>
               )}
 
-              {/* You May Also Like */}
-              {recommendations?.['similar-items']?.products && (
-                <div className="mb-16">
-                  <div className="flex items-center justify-between mb-8">
-                    <div>
-                      <div className="flex items-center mb-2">
-                        <div className="h-1 w-8 bg-green-600 mr-3"></div>
-                        <span className="text-sm font-medium text-green-600 uppercase tracking-wide">Recommendations</span>
+              {/* You May Also Like - Using Recommended For You with fallback to Trending */}
+              {(() => {
+                const recommendedSection = recommendations?.['recommended-for-you'];
+                const trendingSection = recommendations?.trending;
+                const sectionToUse = (recommendedSection?.products && recommendedSection.products.length > 0) 
+                  ? recommendedSection 
+                  : trendingSection;
+                
+                return sectionToUse?.products && sectionToUse.products.length > 0 ? (
+                  <div className="mb-16">
+                    <div className="flex items-center justify-between mb-8">
+                      <div>
+                        <div className="flex items-center mb-2">
+                          <div className="h-1 w-8 bg-green-600 mr-3"></div>
+                          <span className="text-sm font-medium text-green-600 uppercase tracking-wide">Recommendations</span>
+                        </div>
+                        <h2 className="text-2xl font-bold text-gray-900">You May Also Like</h2>
                       </div>
-                      <h2 className="text-2xl font-bold text-gray-900">You May Also Like</h2>
+                      <button
+                        onClick={() => handleSearchQuery('recommended')}
+                        className="px-5 py-2 border border-gray-300 text-gray-700 font-medium rounded hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 flex items-center"
+                      >
+                        View All
+                        <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                      </button>
                     </div>
-                    <button
-                      onClick={() => handleSearchQuery('recommended')}
-                      className="px-5 py-2 border border-gray-300 text-gray-700 font-medium rounded hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 flex items-center"
-                    >
-                      View All
-                      <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                      </svg>
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {recommendations['similar-items'].products.slice(0, 8).map((product) => (
-                      <ProductCard
-                        key={product.id}
-                        product={product}
-                        userId={selectedUserId}
-                        visitorId={getCurrentVisitorId(selectedUserId)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Recommended For You */}
-              {recommendations?.['recommended-for-you']?.products && (
-                <div className="mb-16">
-                  <div className="flex items-center justify-between mb-8">
-                    <div>
-                      <div className="flex items-center mb-2">
-                        <div className="h-1 w-8 bg-purple-600 mr-3"></div>
-                        <span className="text-sm font-medium text-purple-600 uppercase tracking-wide">Personalized</span>
-                      </div>
-                      <h2 className="text-2xl font-bold text-gray-900">Recommended For You</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                      {sectionToUse.products.slice(
+                        sectionToUse === trendingSection ? 4 : 0, 
+                        sectionToUse === trendingSection ? 12 : 8
+                      ).map((product) => (
+                        <ProductCard
+                          key={product.id}
+                          product={product}
+                          userId={selectedUserId}
+                          visitorId={getCurrentVisitorId(selectedUserId)}
+                        />
+                      ))}
                     </div>
-                    <button
-                      onClick={() => handleSearchQuery('personalized')}
-                      className="px-5 py-2 border border-gray-300 text-gray-700 font-medium rounded hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 flex items-center"
-                    >
-                      View All
-                      <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                      </svg>
-                    </button>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {recommendations['recommended-for-you'].products.slice(0, 8).map((product) => (
-                      <ProductCard
-                        key={product.id}
-                        product={product}
-                        userId={selectedUserId}
-                        visitorId={getCurrentVisitorId(selectedUserId)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
+                ) : null;
+              })()}
             </>
           )}
         </div>

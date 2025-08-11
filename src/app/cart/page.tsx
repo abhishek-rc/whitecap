@@ -5,6 +5,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useCart } from '@/components/CartContext';
 import RecommendationsWidget from '@/components/RecommendationsWidget';
+import FrequentlyBoughtTogether from '@/components/FrequentlyBoughtTogether';
+import CartFrequentlyBought from '@/components/CartFrequentlyBought';
 
 // Demo user logic (reuse from homepage)
 const DEMO_USERS = [
@@ -373,6 +375,16 @@ const CartPage = () => {
               </div>
             )}
             
+            {/* Frequently Bought Together - Compact Cart Integration */}
+            {cart.length > 0 && (
+              <CartFrequentlyBought
+                cartItems={cart}
+                visitorId={getCurrentVisitorId(selectedUserId)}
+                userId={selectedUserId || undefined}
+                limit={3}
+              />
+            )}
+            
             <div className="flex justify-center mt-8">
               <button
                 className="px-6 py-2 border border-yellow-500 rounded text-gray-700 hover:bg-yellow-50 font-medium"
@@ -440,7 +452,19 @@ const CartPage = () => {
           </div>
         </div>
 
-        {/* Recommendations below cart */}
+        {/* Frequently Bought Together */}
+        {cart.length > 0 && (
+          <div className="mt-8">
+            <FrequentlyBoughtTogether
+              cartItems={cart}
+              visitorId={getCurrentVisitorId(selectedUserId)}
+              userId={selectedUserId || undefined}
+              limit={6}
+            />
+          </div>
+        )}
+
+        {/* Other Recommendations below cart */}
         <div className="mt-10">
           {cart.length > 0 && (
             <RecommendationsWidget

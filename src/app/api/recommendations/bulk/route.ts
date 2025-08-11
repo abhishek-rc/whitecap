@@ -135,6 +135,28 @@ export async function GET(request: NextRequest) {
           );
           break;
           
+        case 'buy-it-again':
+          // Try with filters first, then fallback without filters if no results
+          promises.push(
+            fetch(`${baseUrl}/api/recommendations/buy-it-again?limit=${limit}&visitorId=${visitorId}${categoryFilter ? `&category=${categoryFilter}` : ''}${brandFilter ? `&brand=${brandFilter}` : ''}`, {
+              headers: { 'User-Agent': 'bulk-api' }
+            })
+              .then(res => res.json())
+              .then(async data => {
+                // If no results and we had filters, try without filters
+                if (data.count === 0 && (categoryFilter || brandFilter)) {
+                  const fallbackRes = await fetch(`${baseUrl}/api/recommendations/buy-it-again?limit=${limit}&visitorId=${visitorId}`, {
+                    headers: { 'User-Agent': 'bulk-api-fallback' }
+                  });
+                  const fallbackData = await fallbackRes.json();
+                  return { type: 'buy-it-again', data: fallbackData };
+                }
+                return { type: 'buy-it-again', data };
+              })
+              .catch(error => ({ type: 'buy-it-again', error: error.message }))
+          );
+          break;
+          
         case 'recommended-for-you':
           // Try with filters first, then fallback without filters if no results
           promises.push(

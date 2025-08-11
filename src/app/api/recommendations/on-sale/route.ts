@@ -3,6 +3,13 @@ import { vertexAICommerceService } from '@/lib/vertex-ai-commerce';
 
 interface VertexAIResult {
   id: string;
+  priceInfo?: {
+    price?: number;
+    originalPrice?: number;
+    currencyCode?: string;
+  };
+  price?: number;
+  availableQuantity?: number;
   metadata?: {
     title?: string;
     description?: string;
@@ -14,9 +21,18 @@ interface VertexAIResult {
       vendorName?: { text?: string[] };
       units?: { text?: string[] };
       isSFPreferred?: { text?: string[] };
+      totalStock?: { numbers?: number[] };
+      stockWarehouses?: { numbers?: number[] };
     };
     availability?: string;
     score?: number;
+    priceInfo?: {
+      price?: number;
+      originalPrice?: number;
+      currencyCode?: string;
+    };
+    price?: number;
+    availableQuantity?: number;
     product?: {
       title?: string;
       description?: string;
@@ -28,8 +44,17 @@ interface VertexAIResult {
         vendorName?: { text?: string[] };
         units?: { text?: string[] };
         isSFPreferred?: { text?: string[] };
+        totalStock?: { numbers?: number[] };
+        stockWarehouses?: { numbers?: number[] };
       };
       availability?: string;
+      priceInfo?: {
+        price?: number;
+        originalPrice?: number;
+        currencyCode?: string;
+      };
+      price?: number;
+      availableQuantity?: number;
     };
   };
 }
@@ -126,7 +151,7 @@ export async function GET(request: NextRequest) {
         availability: productData?.availability || 'UNKNOWN',
         categoryDesc: productData?.categories?.[0] || '',
         urlSlug: result.id.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-        price: 0,
+        price: result.priceInfo?.price || result.priceInfo?.originalPrice || result.price || 0,
         accset: 'VERTEX_AI',
         keywords: ['on-sale', 'promotion', 'discount'],
         orderLastMonth: 0,
@@ -138,9 +163,9 @@ export async function GET(request: NextRequest) {
         webDesc: productData?.description || '',
         webSubDesc: productData?.description || '',
         // Stock information from Vertex AI
-        availableQuantity: (result.metadata as any)?.availableQuantity || (productData as any)?.availableQuantity || 0,
-        totalStock: (productData as any)?.attributes?.totalStock?.numbers?.[0] || (result.metadata as any)?.availableQuantity || 0,
-        stockWarehouses: (productData as any)?.attributes?.stockWarehouses?.numbers?.[0] || 0,
+        availableQuantity: result.metadata?.availableQuantity || productData?.availableQuantity || 0,
+        totalStock: productData?.attributes?.totalStock?.numbers?.[0] || result.metadata?.availableQuantity || 0,
+        stockWarehouses: productData?.attributes?.stockWarehouses?.numbers?.[0] || 0,
         score: result.metadata?.score || 0.9,
         reason: 'On-sale products from Vertex AI recommendation model'
       };

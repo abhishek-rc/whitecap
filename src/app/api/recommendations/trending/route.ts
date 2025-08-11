@@ -14,9 +14,18 @@ interface VertexAIResult {
       vendorName?: { text?: string[] };
       units?: { text?: string[] };
       isSFPreferred?: { text?: string[] };
+      totalStock?: { numbers?: number[] };
+      stockWarehouses?: { numbers?: number[] };
     };
     availability?: string;
     score?: number;
+    priceInfo?: {
+      price?: number;
+      originalPrice?: number;
+      currencyCode?: string;
+    };
+    price?: number;
+    availableQuantity?: number;
   };
 }
 
@@ -69,7 +78,9 @@ export async function GET(request: NextRequest) {
       availability: result.metadata?.availability || 'UNKNOWN',
       categoryDesc: result.metadata?.categories?.[0] || '',
       urlSlug: result.id.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-      price: 0,
+      price: result.metadata?.priceInfo?.price || 
+             result.metadata?.priceInfo?.originalPrice || 
+             result.metadata?.price || 0,
       accset: 'VERTEX_AI',
       keywords: [],
       orderLastMonth: 0,
@@ -77,9 +88,9 @@ export async function GET(request: NextRequest) {
       isDeleted: false,
       webCategory: result.metadata?.categories?.[0] || '',
       // Stock information from Vertex AI
-      availableQuantity: (result.metadata as any)?.availableQuantity || 0,
-      totalStock: (result.metadata as any)?.attributes?.totalStock?.numbers?.[0] || (result.metadata as any)?.availableQuantity || 0,
-      stockWarehouses: (result.metadata as any)?.attributes?.stockWarehouses?.numbers?.[0] || 0,
+      availableQuantity: result.metadata?.availableQuantity || 0,
+      totalStock: result.metadata?.attributes?.totalStock?.numbers?.[0] || result.metadata?.availableQuantity || 0,
+      stockWarehouses: result.metadata?.attributes?.stockWarehouses?.numbers?.[0] || 0,
       score: result.metadata?.score || 0.9,
       reason: 'Trending products from Vertex AI'
     }));
