@@ -6,7 +6,7 @@ import { Product } from '@/lib/data';
 import ProductCard from '@/components/ProductCard';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useCart } from '@/components/CartContext';
+import LayoutWrapper from '@/components/LayoutWrapper';
 
 const DEMO_USERS = [
   { id: "tahir", name: "Tahir", visitorId: "160463000" },
@@ -46,7 +46,6 @@ function getCurrentVisitorId(selectedUserId: string | null): string {
 
 export default function Home() {
   const router = useRouter();
-  const { cart } = useCart();
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [recommendations, setRecommendations] = useState<RecommendationsData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -150,271 +149,11 @@ export default function Home() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-black border-b border-gray-800 text-white py-8">
-        <div className="max-w-7xl mx-auto">
-          {/* Desktop Header */}
-          <div className="hidden md:flex justify-between items-center">
-            <div className="flex items-center">
-              <Link href="/" className="flex items-center">
-                <img src="https://d2ou5j4j4yi9kl.cloudfront.net/userfiles/header/whitecap_header_logo.png" alt="WhiteCap Logo" className="h-10" />
-              </Link>
-            </div>
-            <div className="flex items-center flex-1 space-x-2 lg:space-x-3">
-              <div className="relative flex-1 ml-4">
-                <input
-                  type="text"
-                  placeholder="Search by name, brand, product id."
-                  className="w-full bg-white text-gray-800 pl-3 pr-12 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500"
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearchQuery((e.target as HTMLInputElement).value)}
-                />
-                <button
-                  className="absolute inset-y-0 right-0 px-3 bg-yellow-500 rounded-r-md flex items-center justify-center hover:bg-yellow-600 transition-colors"
-                  onClick={() => {
-                    const input = document.querySelector('.hidden.md\\:flex input[type="text"]') as HTMLInputElement;
-                    handleSearchQuery(input?.value || '');
-                  }}
-                >
-                  <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </button>
+    <LayoutWrapper>
 
-              </div>
-              <button
-                onClick={() => router.push('/ai-support')}
-                className="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors flex items-center"
-                title="AI Shopping Assistant"
-              >
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
-                <span className="hidden sm:inline">AI Mode</span>
-              </button>
-              <a href="#" className="text-white hover:text-gray-300 flex items-center whitespace-nowrap">
-                <svg className="h-5 w-5 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                <span>Sign In</span>
-              </a>
-              <div className="flex items-center text-white hover:text-gray-300 whitespace-nowrap">
-                <svg className="h-5 w-5 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <div className="flex flex-col">
-                  <span className="text-xs text-white">Selected Branch</span>
-                  <div className="flex items-center">
-                    <span className="text-white text-sm font-medium">Birmingham - </span>
-                    {/* <select
-                      value={selectedUserId || ''}
-                      onChange={(e) => handleUserChange(e.target.value)}
-                      className="appearance-none bg-transparent text-sm font-medium focus:outline-none text-white"
-                    >
-                      <option value="" className="text-gray-900">Guest</option>
-                      {DEMO_USERS.map((user) => (
-                        <option key={user.id} value={user.id} className="text-gray-900">
-                          {user.name}
-                        </option>
-                      ))}
-                    </select> */}
-                    {/* <svg className="h-4 w-4 text-white ml-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg> */}
-                  </div>
-                </div>
-              </div>
-              <div
-                onClick={() => router.push('/cart')}
-                className="flex items-center text-white hover:text-gray-300 cursor-pointer whitespace-nowrap"
-              >
-                <div className="relative">
-                  <svg className="h-6 w-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                  <span className="absolute -top-2 -right-2 bg-yellow-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                    {cart.reduce((total, item) => total + item.quantity, 0)}
-                  </span>
-                </div>
-                <span className="ml-1 font-medium">CART</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Mobile Header */}
-          <div className="md:hidden">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center">
-                <Link href="/" className="flex items-center">
-                  <img src="https://d2ou5j4j4yi9kl.cloudfront.net/userfiles/header/whitecap_header_logo.png" alt="WhiteCap Logo" className="h-8" />
-                </Link>
-              </div>
-
-              <div className="flex items-center space-x-3">
-                {/* Cart Icon - Always visible on mobile */}
-                <div
-                  onClick={() => router.push('/cart')}
-                  className="flex items-center text-white hover:text-gray-300 cursor-pointer"
-                >
-                  <div className="relative">
-                    <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                    <span className="absolute -top-2 -right-2 bg-yellow-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                      {cart.reduce((total, item) => total + item.quantity, 0)}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Mobile Menu Button */}
-                <button
-                  onClick={() => {
-                    const mobileMenu = document.getElementById('mobile-menu');
-                    if (mobileMenu) {
-                      mobileMenu.classList.toggle('hidden');
-                    }
-                  }}
-                  className="text-white p-2"
-                >
-                  <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            {/* Mobile Menu - Hidden by default */}
-            <div id="mobile-menu" className="hidden pt-4 pb-2">
-              {/* Mobile Search */}
-              <div className="relative mb-4">
-                <input
-                  type="text"
-                  placeholder="Search products..."
-                  className="w-full pl-3 pr-12 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 text-gray-800"
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearchQuery((e.target as HTMLInputElement).value)}
-                />
-                <button
-                  className="absolute inset-y-0 right-0 px-3 bg-yellow-500 rounded-r-md flex items-center justify-center hover:bg-yellow-600 transition-colors"
-                  onClick={() => {
-                    const input = document.querySelector('#mobile-menu input[type="text"]') as HTMLInputElement;
-                    handleSearchQuery(input?.value || '');
-                  }}
-                >
-                  <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </button>
-              </div>
-
-              {/* Mobile Menu Items */}
-              <div className="space-y-3">
-                <a href="#" className="flex items-center text-white hover:text-gray-300 py-2">
-                  <svg className="h-5 w-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  <span>Sign In</span>
-                </a>
-
-                <div className="py-2">
-                  <div className="flex items-center text-white mb-1">
-                    <svg className="h-5 w-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <span className="text-sm">Selected Branch</span>
-                  </div>
-                  {/* <div className="pl-8">
-                    <select
-                      value={selectedUserId || ''}
-                      onChange={(e) => handleUserChange(e.target.value)}
-                      className="w-full appearance-none bg-gray-800 text-white py-1 px-2 rounded text-sm focus:outline-none focus:ring-1 focus:ring-yellow-500"
-                    >
-                      <option value="" className="text-gray-900">Guest</option>
-                      {DEMO_USERS.map((user) => (
-                        <option key={user.id} value={user.id} className="text-gray-900">
-                          {user.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div> */}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Navigation Bar */}
-      <nav className=" border-b border-gray-800">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-stretch h-[50px]">
-            <button className="flex-1 px-4 py-3 flex items-center justify-center hover:bg-gray-300 transition-colors text-xs font-bold text-black bg-gray-300 border-r border-gray-300">
-              <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-              CATEGORIES
-            </button>
-            <a href="#" className="flex-1 px-4 py-3 text-xs font-bold text-black hover:bg-gray-300 transition-colors flex items-center justify-center border-r border-gray-300">
-              BRANDS
-            </a>
-            <a href="#" className="flex-1 px-4 py-3 text-xs font-bold text-black hover:bg-gray-300 transition-colors flex items-center justify-center border-r border-gray-300">
-              LOCATIONS
-            </a>
-            <a href="#" className="flex-1 px-4 py-3 text-xs font-bold text-black hover:bg-gray-300 transition-colors flex items-center justify-center border-r border-gray-300">
-              SERVICES
-            </a>
-            <a href="#" className="flex-1 px-4 py-3 text-xs font-bold text-black hover:bg-gray-300 transition-colors flex items-center justify-center border-r border-gray-300">
-              REQUEST A QUOTE
-            </a>
-            <a href="#" className="flex-1 px-4 py-3 text-xs font-bold text-black hover:bg-gray-300 transition-colors flex items-center justify-center border-r border-gray-300">
-              TOP DEALS
-            </a>
-            <div className="flex-1 px-4 py-3 flex items-center justify-center">
-              <span className="text-xs font-bold text-black">1-800-944-8322</span>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* Navigation */}
-      <nav className="bg-gray-100 border-b border-gray-200">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <button className="px-4 py-3 flex items-center hover:bg-gray-200 transition-colors uppercase text-sm font-medium">
-                <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-                CATEGORIES
-              </button>
-              {/* <a href="#" className="px-4 py-3 hover:bg-gray-200 transition-colors uppercase text-sm font-medium">
-                BRANDS
-              </a>
-              <a href="#" className="px-4 py-3 hover:bg-gray-200 transition-colors uppercase text-sm font-medium">
-                LOCATIONS
-              </a>
-              <a href="#" className="px-4 py-3 hover:bg-gray-200 transition-colors uppercase text-sm font-medium">
-                SERVICES
-              </a>
-              <a href="#" className="px-4 py-3 hover:bg-gray-200 transition-colors uppercase text-sm font-medium">
-                REQUEST A QUOTE
-              </a> */}
-            </div>
-            {/* <div className="flex items-center">
-              <a href="#" className="px-4 py-3 hover:bg-gray-200 transition-colors uppercase text-sm font-medium">
-                TOP DEALS
-              </a>
-              <a href="tel:+1-800-944-8322" className="px-4 py-3 hover:bg-gray-200 transition-colors uppercase text-sm font-medium">
-                1-800-944-8322
-              </a>
-            </div> */}
-          </div>
-        </div>
-      </nav>
 
       {/* Main Promotional Banner */}
-      <section className="relative max-w-[1280px] mx-auto boverflow-hidden">
+      <section className="relative max-w-[1280px] mx-auto boverflow-hidden mt-[30px]">
         {/* <div className="max-w-7xl mx-auto">
           <div className="relative h-64 md:h-80 flex items-center">
             <div className="absolute inset-0 z-0">
@@ -924,6 +663,6 @@ export default function Home() {
           </div>
         </div>
       </footer>
-    </div>
+    </LayoutWrapper>
   );
 }
