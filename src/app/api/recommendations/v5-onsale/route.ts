@@ -36,6 +36,13 @@ interface FullProduct {
 
 interface VertexAIResult {
   id: string;
+  priceInfo?: {
+    price?: number;
+    originalPrice?: number;
+    currencyCode?: string;
+  };
+  price?: number;
+  availableQuantity?: number;
   metadata?: {
     title?: string;
     description?: string;
@@ -92,26 +99,35 @@ export async function GET(request: NextRequest) {
     const visitorId = searchParams.get('visitorId') || 'anonymous-user';
     const categoryFilter = searchParams.get('category');
     const brandFilter = searchParams.get('brand');
-    const userId = searchParams.get('userId');
 
-    // Build user event for recommended-for-you context
+    // Build user event for v5-onsale products context
     const userEvent = {
-      eventType: 'home-page-view' as const,
+      eventType: 'detail-page-view' as const,
       visitorId,
       eventTime: new Date().toISOString(),
-      uri: '/recommendations/recommended-for-you',
+      uri: '/recommendations/v5-onsale',
       pageCategories: categoryFilter ? [categoryFilter] : [],
-      userInfo: userId ? { userId } : undefined,
+      productDetails: [{
+        product: {
+          id: 'v5-onsale-context',
+          type: 'PRIMARY' as const,
+          categories: categoryFilter ? [categoryFilter] : [],
+          title: 'V5 On Sale Products Context',
+          languageCode: 'en',
+          availability: 'IN_STOCK' as const
+        },
+        quantity: 1
+      }],
       attributes: {
         context: {
-          text: ['recommended-for-you', 'personalized', 'recommendation'],
+          text: ['v5-onsale', 'on-sale', 'promotion', 'discount'],
           searchable: true,
           indexable: true
         }
       }
     };
 
-    // Build filter for recommended-for-you if category or brand is specified
+    // Build filter for v5-onsale products if category or brand is specified
     let filter = '';
     const filters: string[] = [];
     
@@ -127,27 +143,23 @@ export async function GET(request: NextRequest) {
       filter = filters.join(' AND ');
     }
 
-
-
-    // TEMPORARILY DISABLED: Model not yet trained in new GCP project
-    console.log('👤 Getting recommended-for-you products from Vertex AI:', {
+    console.log('🏷️ Getting v5-onsale recommendations:', {
       visitorId,
-      userId,
       limit,
       categoryFilter,
       brandFilter,
       filter
     });
 
-    // Get recommended-for-you products from Vertex AI using the recommended-for-you model
+    // Get v5-onsale products from Vertex AI using the new v5-onsale model
     const predictionResponse = await vertexAICommerceService.predict(
-      'recommended-for-you',
+      'v5-onsale',
       userEvent,
       limit,
       filter
     );
 
-    console.log('📊 Recommended-for-you prediction response:', {
+    console.log('📊 V5-onsale prediction response:', {
       resultCount: predictionResponse.results?.length || 0,
       hasResults: !!predictionResponse.results
     });
@@ -156,12 +168,10 @@ export async function GET(request: NextRequest) {
     const productIds = (predictionResponse.results || []).map((result: VertexAIResult) => result.id);
     const fullProducts = await vertexAICommerceService.getProducts(productIds);
     
-    console.log('📦 Full product details fetched for recommended-for-you:', {
+    console.log('📦 Full product details fetched for v5-onsale:', {
       requestedIds: productIds.length,
       receivedProducts: fullProducts.length
     });
-
-
 
     // Transform results using full product data (like search API does)
     const products = fullProducts.map((product: FullProduct) => {
@@ -209,7 +219,7 @@ export async function GET(request: NextRequest) {
         urlSlug: product.id.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
         price: price, // Now using actual product pricing data
         accset: 'VERTEX_AI',
-        keywords: ['recommended-for-you', 'personalized', 'recommendation'],
+        keywords: ['v5-onsale', 'on-sale', 'promotion', 'discount'],
         orderLastMonth: 0,
         isActive: true,
         isDeleted: false,
@@ -222,59 +232,44 @@ export async function GET(request: NextRequest) {
         availableQuantity: product.availableQuantity || attributes.availableQuantity?.numbers?.[0] || 0,
         totalStock: attributes.totalStock?.numbers?.[0] || product.availableQuantity || 0,
         stockWarehouses: attributes.stockWarehouses?.numbers?.[0] || 0,
-        score: 0.95,
-        reason: 'Personalized recommendations from Vertex AI with full product data'
+        score: 0.9,
+        reason: 'V5 on-sale products from enhanced Vertex AI recommendation model with full product data'
       };
     });
 
     const responseData = {
       products,
-      score: products.length > 0 ? 0.95 : 0,
+      score: products.length > 0 ? 0.9 : 0,
       reason: products.length > 0 
-        ? 'Personalized recommendations from Vertex AI recommendation model' 
-        : 'No personalized recommendations found',
+        ? 'V5 on-sale products from enhanced Vertex AI recommendation model' 
+        : 'No v5-onsale products found',
       count: products.length,
-      type: 'recommended-for-you',
-      metadata: {
-        model: 'recommended-for-you',
-        placementId: 'recommended-for-you',
-        source: 'vertex-ai-live',
-        timestamp: new Date().toISOString(),
-        filters: {
-          category: categoryFilter,
-          brand: brandFilter
-        },
-        userContext: {
-          userId: userId,
-          visitorId: visitorId
-        }
-      }
+      totalPages: Math.ceil(products.length / limit),
+      currentPage: 1,
+      type: 'v5-onsale',
+      model: 'v5-onsale',
+      placement: 'v5-onsale'
     };
 
-    
+    console.log('✅ V5-onsale recommendations response:', {
+      productCount: products.length,
+      score: responseData.score
+    });
 
     return NextResponse.json(responseData);
 
   } catch (error) {
-    console.error('❌ Recommended-for-you recommendations API error:', error);
+    console.error('❌ V5-onsale recommendations error:', error);
     
-    // Return error response without fallback to local data
-    return NextResponse.json(
-      { 
-        error: 'Failed to get recommended-for-you recommendations from Vertex AI',
-        products: [],
-        count: 0,
-        type: 'recommended-for-you',
-        score: 0,
-        reason: 'Vertex AI API error',
-        metadata: {
-          model: 'recommended-for-you',
-          source: 'vertex-ai-live',
-          error: error instanceof Error ? error.message : 'Unknown error',
-          timestamp: new Date().toISOString()
-        }
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      products: [],
+      score: 0,
+      reason: 'Error fetching v5-onsale recommendations',
+      count: 0,
+      totalPages: 0,
+      currentPage: 1,
+      type: 'v5-onsale',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
-} 
+}

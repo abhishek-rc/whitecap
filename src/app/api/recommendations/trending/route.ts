@@ -1,6 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { vertexAICommerceService } from '@/lib/vertex-ai-commerce';
 
+interface FullProduct {
+  id: string;
+  name?: string;
+  title?: string;
+  displayName?: string;
+  description?: string;
+  summary?: string;
+  categories?: string[];
+  primaryCategory?: string;
+  category?: string;
+  images?: Array<{ uri?: string; url?: string }>;
+  imageUrl?: string;
+  imageURL?: string;
+  priceInfo?: {
+    price?: number;
+    originalPrice?: number;
+    currencyCode?: string;
+  };
+  price?: number;
+  availability?: string;
+  availableQuantity?: number;
+  attributes?: {
+    [key: string]: {
+      text?: string[];
+      textValue?: string[];
+      numbers?: number[];
+    };
+  };
+  tags?: string[];
+  brand?: string;
+  isSFPreferred?: boolean;
+}
+
 interface VertexAIResult {
   id: string;
   metadata?: {
@@ -50,97 +83,201 @@ export async function GET(request: NextRequest) {
       filter = `categories: ANY("${categoryFilter}")`;
     }
 
-    // TEMPORARILY DISABLED: Model not yet trained in new GCP project
+    console.log('🔥 Getting trending products from Vertex AI:', {
+      visitorId,
+      limit,
+      categoryFilter,
+      filter
+    });
+
     // Get trending products from Vertex AI
-    // const predictionResponse = await vertexAICommerceService.predict(
-    //   'most_popular_items_default',
-    //   userEvent,
-    //   limit,
-    //   filter
-    // );
+    const predictionResponse = await vertexAICommerceService.predict(
+      'trending',
+      userEvent,
+      limit,
+      filter
+    );
 
-    // Return empty result until model is trained
-    const predictionResponse = { results: [] };
+    console.log('📊 Trending prediction response:', {
+      resultCount: predictionResponse.results?.length || 0,
+      hasResults: !!predictionResponse.results
+    });
 
-    // Transform results to our format
-    const products = (predictionResponse.results || []).map((result: VertexAIResult) => ({
-      id: result.id,
-      sku: result.id,
-      displayName: result.metadata?.title || result.id,
-      description: result.metadata?.description || '',
-      category: result.metadata?.categories?.[0] || '',
-      brand: result.metadata?.attributes?.brand?.text?.[0] || '',
-      vendor: result.metadata?.attributes?.vendor?.text?.[0] || '',
-      vendorName: result.metadata?.attributes?.vendorName?.text?.[0] || '',
-      units: result.metadata?.attributes?.units?.text?.[0] || '',
-      isSFPreferred: result.metadata?.attributes?.isSFPreferred?.text?.[0] === 'true',
-      imageURL: result.metadata?.images?.[0]?.uri || '',
-      availability: result.metadata?.availability || 'UNKNOWN',
-      categoryDesc: result.metadata?.categories?.[0] || '',
-      urlSlug: result.id.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-      price: result.metadata?.priceInfo?.price || 
-             result.metadata?.priceInfo?.originalPrice || 
-             result.metadata?.price || 0,
-      accset: 'VERTEX_AI',
-      keywords: [],
-      orderLastMonth: 0,
-      isActive: true,
-      isDeleted: false,
-      webCategory: result.metadata?.categories?.[0] || '',
-      // Stock information from Vertex AI
-      availableQuantity: result.metadata?.availableQuantity || 0,
-      totalStock: result.metadata?.attributes?.totalStock?.numbers?.[0] || result.metadata?.availableQuantity || 0,
-      stockWarehouses: result.metadata?.attributes?.stockWarehouses?.numbers?.[0] || 0,
-      score: result.metadata?.score || 0.9,
-      reason: 'Trending products from Vertex AI'
-    }));
+    // Debug: Log raw result structure to understand pricing data location
+    if (predictionResponse.results && predictionResponse.results.length > 0) {
+      console.log('🔍 First trending result structure:', JSON.stringify(predictionResponse.results[0], null, 2));
+    }
 
-    // If no results from Vertex AI, fall back to local recommendation engine
+    // Get full product details for each result (like search API does)
+    const productIds = (predictionResponse.results || []).map((result: VertexAIResult) => result.id);
+    const fullProducts = await vertexAICommerceService.getProducts(productIds);
+    
+    console.log('📦 Full product details fetched:', {
+      requestedIds: productIds.length,
+      receivedProducts: fullProducts.length,
+      firstProductStructure: fullProducts[0] ? JSON.stringify(fullProducts[0], null, 2) : 'No products'
+    });
+
+    // Transform results using full product data (like search API does)
+    const products = fullProducts.map((product: FullProduct) => {
+      const title = product.title || product.name || product.displayName || product.id;
+      const description = product.description || product.summary || '';
+      const brand = product.attributes?.brand?.text?.[0] || 
+                   product.attributes?.brand?.textValue?.[0] || 
+                   product.brand || '';
+      const category = product.categories?.[0] || 
+                      product.primaryCategory || 
+                      product.category || '';
+      const imageUrl = product.images?.[0]?.uri || 
+                      product.images?.[0]?.url || 
+                      product.imageUrl || 
+                      product.imageURL || '';
+      const price = product.priceInfo?.price || 
+                   product.priceInfo?.originalPrice || 
+                   product.price || 0;
+      const availability = product.availability || 'IN_STOCK';
+      const isSFPreferred = product.attributes?.isSFPreferred?.text?.[0] === 'true' ||
+                           product.attributes?.isSFPreferred?.textValue?.[0] === 'true' ||
+                           product.isSFPreferred === true;
+      
+      // Extract additional fields from attributes
+      const attributes = product.attributes || {};
+      const vendor = attributes.vendor?.text?.[0] || attributes.vendor?.textValue?.[0] || '';
+      const vendorName = attributes.vendorName?.text?.[0] || attributes.vendorName?.textValue?.[0] || vendor;
+      const units = attributes.units?.text?.[0] || attributes.units?.textValue?.[0] || '';
+      const sku = attributes.sku?.text?.[0] || attributes.sku?.textValue?.[0] || product.id;
+
+      return {
+        id: product.id,
+        sku: sku,
+        displayName: title,
+        description: description,
+        category: category,
+        brand: brand,
+        vendor: vendor,
+        vendorName: vendorName,
+        units: units,
+        isSFPreferred: isSFPreferred,
+        imageURL: imageUrl,
+        availability: availability,
+        categoryDesc: category,
+        urlSlug: product.id.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        price: price, // Now using actual product pricing data
+        accset: 'VERTEX_AI',
+        keywords: product.tags || [],
+        orderLastMonth: 0,
+        isActive: true,
+        isDeleted: false,
+        webCategory: category,
+        // Stock information from full product data
+        availableQuantity: product.availableQuantity || attributes.availableQuantity?.numbers?.[0] || 0,
+        totalStock: attributes.totalStock?.numbers?.[0] || product.availableQuantity || 0,
+        stockWarehouses: attributes.stockWarehouses?.numbers?.[0] || 0,
+        score: 0.9,
+        reason: 'Trending products from Vertex AI with full product data'
+      };
+    });
+
+    // If no results from Vertex AI trending, try using v5-onsale as fallback for trending-style results
     if (products.length === 0) {
-      console.log('🔄 No Vertex AI results, falling back to local recommendation engine...');
+      console.log('🔄 No Vertex AI trending results, trying v5-onsale as fallback...');
+      
       try {
-        const { recommendationEngine } = await import('@/lib/recommendations');
-        const localResult = await recommendationEngine.getTrendingProducts(
-          categoryFilter ? [categoryFilter] : undefined, 
-          limit
+        // Try v5-onsale model as fallback for trending
+        const fallbackResponse = await vertexAICommerceService.predict(
+          'v5-onsale',
+          userEvent,
+          limit,
+          filter
         );
-        
-        const localProducts = localResult.products.map(product => ({
-          id: product.id,
-          sku: product.sku,
-          displayName: product.displayName,
-          description: product.description,
-          category: product.category,
-          brand: product.brand,
-          vendor: product.vendor,
-          vendorName: product.vendorName,
-          units: product.units,
-          isSFPreferred: product.isSFPreferred,
-          imageURL: product.imageURL,
-          availability: product.availability,
-          categoryDesc: product.categoryDesc,
-          urlSlug: product.urlSlug,
-          price: product.price || 0,
-          accset: product.accset,
-          keywords: product.keywords,
-          orderLastMonth: product.orderLastMonth || 0,
-          isActive: product.isActive,
-          isDeleted: product.isDeleted,
-          webCategory: product.webCategory,
-          score: localResult.score,
-          reason: 'Trending products from local engine (Vertex AI fallback)'
-        }));
 
-        return NextResponse.json({
-          products: localProducts,
-          score: localResult.score,
-          reason: 'Trending products from local engine (Vertex AI fallback)',
-          count: localProducts.length,
-          type: 'trending'
+        console.log('📊 V5-onsale fallback response:', {
+          resultCount: fallbackResponse.results?.length || 0,
+          hasResults: !!fallbackResponse.results
         });
+
+        // Get full product details for fallback results
+        const fallbackProductIds = (fallbackResponse.results || []).map((result: VertexAIResult) => result.id);
+        const fallbackFullProducts = await vertexAICommerceService.getProducts(fallbackProductIds);
+
+        // Transform fallback results with trending-style labeling
+        const fallbackProducts = fallbackFullProducts.map((product: FullProduct) => {
+          const title = product.title || product.name || product.displayName || product.id;
+          const description = product.description || product.summary || '';
+          const brand = product.attributes?.brand?.text?.[0] || 
+                       product.attributes?.brand?.textValue?.[0] || 
+                       product.brand || '';
+          const category = product.categories?.[0] || 
+                          product.primaryCategory || 
+                          product.category || '';
+          const imageUrl = product.images?.[0]?.uri || 
+                          product.images?.[0]?.url || 
+                          product.imageUrl || 
+                          product.imageURL || '';
+          const price = product.priceInfo?.price || 
+                       product.priceInfo?.originalPrice || 
+                       product.price || 0;
+          const availability = product.availability || 'IN_STOCK';
+          const isSFPreferred = product.attributes?.isSFPreferred?.text?.[0] === 'true' ||
+                               product.attributes?.isSFPreferred?.textValue?.[0] === 'true' ||
+                               product.isSFPreferred === true;
+          
+          const attributes = product.attributes || {};
+          const vendor = attributes.vendor?.text?.[0] || attributes.vendor?.textValue?.[0] || '';
+          const vendorName = attributes.vendorName?.text?.[0] || attributes.vendorName?.textValue?.[0] || vendor;
+          const units = attributes.units?.text?.[0] || attributes.units?.textValue?.[0] || '';
+          const sku = attributes.sku?.text?.[0] || attributes.sku?.textValue?.[0] || product.id;
+
+          return {
+            id: product.id,
+            sku: sku,
+            displayName: title,
+            description: description,
+            category: category,
+            brand: brand,
+            vendor: vendor,
+            vendorName: vendorName,
+            units: units,
+            isSFPreferred: isSFPreferred,
+            imageURL: imageUrl,
+            availability: availability,
+            categoryDesc: category,
+            urlSlug: product.id.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+            price: price,
+            accset: 'VERTEX_AI',
+            keywords: ['trending', 'popular', 'recommendation'], // Trending-style keywords
+            orderLastMonth: 0,
+            isActive: true,
+            isDeleted: false,
+            webCategory: category,
+            availableQuantity: product.availableQuantity || attributes.availableQuantity?.numbers?.[0] || 0,
+            totalStock: attributes.totalStock?.numbers?.[0] || product.availableQuantity || 0,
+            stockWarehouses: attributes.stockWarehouses?.numbers?.[0] || 0,
+            score: 0.9,
+            reason: 'Trending products from v5-onsale model (trending placement fallback)'
+          };
+        });
+
+        if (fallbackProducts.length > 0) {
+          return NextResponse.json({
+            products: fallbackProducts,
+            score: 0.9,
+            reason: 'Trending products from v5-onsale model (trending placement fallback)',
+            count: fallbackProducts.length,
+            type: 'trending'
+          });
+        }
       } catch (fallbackError) {
-        console.error('❌ Local fallback also failed:', fallbackError);
+        console.error('❌ V5-onsale fallback also failed:', fallbackError);
       }
+      
+      return NextResponse.json({
+        products: [],
+        score: 0,
+        reason: 'No trending products available from Vertex AI at this time',
+        count: 0,
+        type: 'trending'
+      });
     }
 
     return NextResponse.json({

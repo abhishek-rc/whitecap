@@ -103,30 +103,42 @@ export async function GET(request: NextRequest) {
           );
           break;
           
-        case 'trending':
-          // Try trending with fallback to similar-items if no results
+        case 'v5-onsale':
+          // New v5-onsale model with enhanced on-sale recommendations
           promises.push(
-            fetch(`${baseUrl}/api/recommendations?type=trending&limit=${limit}`, {
+            fetch(`${baseUrl}/api/recommendations/v5-onsale?limit=${limit}&visitorId=${visitorId}${categoryFilter ? `&category=${categoryFilter}` : ''}${brandFilter ? `&brand=${brandFilter}` : ''}`, {
               headers: { 'User-Agent': 'bulk-api' }
             })
               .then(res => res.json())
               .then(async data => {
-                // If no results from trending, try getting popular similar items
-                if ((!data.recommendations || data.recommendations.length === 0)) {
-                  const fallbackRes = await fetch(`${baseUrl}/api/recommendations/similar-items?sku=${productSku}&limit=${limit}&visitorId=${visitorId}`, {
-                    headers: { 'User-Agent': 'bulk-api-trending-fallback' }
+                // If no results and we had filters, try without filters
+                if (data.count === 0 && (categoryFilter || brandFilter)) {
+                  const fallbackRes = await fetch(`${baseUrl}/api/recommendations/v5-onsale?limit=${limit}&visitorId=${visitorId}`, {
+                    headers: { 'User-Agent': 'bulk-api-fallback' }
                   });
                   const fallbackData = await fallbackRes.json();
-                  // Modify the response to indicate it's trending-style
-                  if (fallbackData.products) {
-                    fallbackData.products = fallbackData.products.map((p: ProductResponse) => ({
-                      ...p,
-                      reason: 'Trending products (similar to viewed items)',
-                      keywords: ['trending', 'popular', 'recommendation']
-                    }));
-                    fallbackData.reason = 'Trending products (similar to viewed items)';
-                    fallbackData.type = 'trending';
-                  }
+                  return { type: 'v5-onsale', data: fallbackData };
+                }
+                return { type: 'v5-onsale', data };
+              })
+              .catch(error => ({ type: 'v5-onsale', error: error.message }))
+          );
+          break;
+          
+        case 'trending':
+          // Try with filters first, then fallback without filters if no results
+          promises.push(
+            fetch(`${baseUrl}/api/recommendations/trending?limit=${limit}&visitorId=${visitorId}${categoryFilter ? `&category=${categoryFilter}` : ''}${brandFilter ? `&brand=${brandFilter}` : ''}`, {
+              headers: { 'User-Agent': 'bulk-api' }
+            })
+              .then(res => res.json())
+              .then(async data => {
+                // If no results and we had filters, try without filters
+                if (data.count === 0 && (categoryFilter || brandFilter)) {
+                  const fallbackRes = await fetch(`${baseUrl}/api/recommendations/trending?limit=${limit}&visitorId=${visitorId}`, {
+                    headers: { 'User-Agent': 'bulk-api-fallback' }
+                  });
+                  const fallbackData = await fallbackRes.json();
                   return { type: 'trending', data: fallbackData };
                 }
                 return { type: 'trending', data };
@@ -234,6 +246,8 @@ export async function GET(request: NextRequest) {
             availability: string;
             score: number;
             reason: string;
+            price?: number;
+            priceInfo?: { price?: number; originalPrice?: number };
           }[]).map((rec) => ({
             id: rec.SKU,
             sku: rec.SKU,
@@ -249,7 +263,7 @@ export async function GET(request: NextRequest) {
             availability: rec.availability,
             categoryDesc: rec.Category,
             urlSlug: rec.SKU.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-            price: 0,
+            price: rec.priceInfo?.price || rec.priceInfo?.originalPrice || rec.price || 0,
             accset: 'API',
             keywords: [],
             orderLastMonth: 0,

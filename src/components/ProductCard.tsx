@@ -88,8 +88,37 @@ export default function ProductCard({ product, userId, visitorId }: ProductCardP
     }
   };
 
+  const handleProductClick = async () => {
+    // Send user event for product detail view
+    await sendUserEvent({
+      eventType: 'detail-page-view',
+      productDetails: [{ product }],
+      uri: `/product/${product.sku}`
+    });
+    
+    // Navigate to product detail page
+    router.push(`/product/${product.sku}`);
+  };
+
+  const handleAddToCart = async (e: React.MouseEvent) => {
+    // Prevent triggering the product click when clicking add to cart
+    e.stopPropagation();
+    
+    setAddLoading(true);
+    await sendUserEvent({
+      eventType: 'add-to-cart',
+      productDetails: [{ product, quantity: 1 }],
+      uri: window.location.href
+    });
+    addToCart(product, 1);
+    setAddLoading(false);
+  };
+
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-200">
+    <div 
+      className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-200 cursor-pointer"
+      onClick={handleProductClick}
+    >
       {/* Product Image */}
       <div className="aspect-w-1 aspect-h-1 bg-gray-200">
         {product.imageURL && !imageError ? (
@@ -137,17 +166,7 @@ export default function ProductCard({ product, userId, visitorId }: ProductCardP
           {/* Add to Cart Button */}
           <button 
             className="px-3 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition-colors"
-            onClick={async () => {
-              setAddLoading(true);
-              await sendUserEvent({
-                eventType: 'add-to-cart',
-                productDetails: [{ product, quantity: 1 }],
-                uri: window.location.href
-              });
-              addToCart(product, 1);
-              setAddLoading(false);
-              // Removed navigation to product detail page
-            }}
+            onClick={handleAddToCart}
             disabled={addLoading}
           >
             {addLoading ? (

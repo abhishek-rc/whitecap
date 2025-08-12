@@ -15,7 +15,7 @@ interface RecommendationsData {
   similar?: RecommendationSection;
   complementary?: RecommendationSection;
   trending?: RecommendationSection;
-  'on-sale'?: RecommendationSection;
+  'v5-onsale'?: RecommendationSection;
   'similar-items'?: RecommendationSection;
   'recommended-for-you'?: RecommendationSection;
   categoryTrending?: { [category: string]: RecommendationSection };
@@ -60,9 +60,9 @@ export default function RecommendationsWidget({
         
         if (productSku) {
           searchParams.set('sku', productSku);
-          searchParams.set('models', 'similar-items,on-sale,trending,recommended-for-you');
+          searchParams.set('models', 'similar-items,v5-onsale,trending,recommended-for-you');
         } else {
-          searchParams.set('models', 'trending,on-sale,recommended-for-you');
+          searchParams.set('models', 'trending,v5-onsale,recommended-for-you');
         }
         
         searchParams.set('limit', limit.toString());
@@ -223,7 +223,7 @@ export default function RecommendationsWidget({
 
   console.log('🔍 RecommendationsWidget - Rendering sections:', {
     similarItems: !!recommendations['similar-items']?.products,
-    onSale: !!recommendations['on-sale']?.products,
+    v5OnSale: !!recommendations['v5-onsale']?.products,
     trending: !!recommendations.trending?.products,
     allKeys: Object.keys(recommendations)
   });
@@ -276,12 +276,12 @@ export default function RecommendationsWidget({
         />
       )}
 
-      {recommendations['on-sale'] && recommendations['on-sale'].products && (
+      {recommendations['v5-onsale'] && recommendations['v5-onsale'].products && (
         <RecommendationSection
-          title="🏷️ On Sale"
-          products={recommendations['on-sale'].products}
-          reason={recommendations['on-sale'].reason || 'On-sale products found using Vertex AI'}
-          score={recommendations['on-sale'].score || 0}
+          title="🏷️ Special Offers"
+          products={recommendations['v5-onsale'].products}
+          reason={recommendations['v5-onsale'].reason || 'Enhanced on-sale products found using Vertex AI v5 model'}
+          score={recommendations['v5-onsale'].score || 0}
         />
       )}
 
