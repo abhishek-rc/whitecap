@@ -295,41 +295,49 @@ const CartPage = () => {
               <div className="divide-y divide-gray-200 border-t border-gray-200">
                 {cart.map(({ product, quantity }) => (
                   <div key={product.id} className="py-6 relative border-b border-gray-200 last:border-b-0">
-                    <div className="flex items-center">
-                      <div className="w-24 h-24 relative mr-6">
-                        {product.imageURL ? (
-                          <Image src={product.imageURL} alt={product.displayName} fill className="object-contain" />
-                        ) : (
-                          <div className="w-24 h-24 bg-gray-100 flex items-center justify-center">
-                            <span className="text-gray-400">No image</span>
+                    <div className="flex flex-col md:flex-row gap-4">
+                      <div className="flex items-start flex-1">
+                        <div className="w-24 h-24 relative mr-4 flex-shrink-0">
+                          {product.imageURL ? (
+                            <Image src={product.imageURL} alt={product.displayName} fill className="object-contain" />
+                          ) : (
+                            <div className="w-24 h-24 bg-gray-100 flex items-center justify-center rounded">
+                              <span className="text-gray-400 text-xs">No image</span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="flex-1 min-w-0">
+                          <div className="mb-1">
+                            <div className="text-blue-600 font-medium text-sm">
+                              {product.brand || 'Werner'}
+                            </div>
+                            <h2 className="font-medium text-lg text-gray-900 leading-tight pr-8 md:pr-2 line-clamp-2">
+                              {product.displayName || 'Werner Pump Jack Only'}
+                            </h2>
                           </div>
-                        )}
-                      </div>
-                      
-                      <div className="flex-1">
-                        <div className="flex flex-col">
-                          <div className="text-blue-600 font-medium">
-                            {product.brand || 'Werner'}
-                          </div>
-                          <h2 className="font-medium text-lg text-gray-900">{product.displayName || 'Werner Pump Jack Only'}</h2>
                           
-                          <div className="mt-1">
-                            <div className="flex space-x-6">
-                              <div className="text-sm text-gray-600">SKU#<span className="font-bold">{product.sku || '104PJ'}</span></div>
-                              <div className="text-sm text-gray-600">MFG#<span className="font-bold">{(product as any).manufacturerSku || 'SPJ100'}</span></div>
+                          <div className="mb-2">
+                            <div className="flex flex-col sm:flex-row sm:gap-4 gap-1">
+                              <div className="text-sm text-gray-600">
+                                SKU# <span className="font-semibold">{product.sku || '104PJ'}</span>
+                              </div>
+                              <div className="text-sm text-gray-600">
+                                MFG# <span className="font-semibold">{(product as any).manufacturerSku || 'SPJ100'}</span>
+                              </div>
                             </div>
                           </div>
                           
-                          <div className="mt-1 flex items-center">
-                            <svg className="h-4 w-4 text-green-600 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div className="flex items-center mb-2">
+                            <svg className="h-4 w-4 text-green-600 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                             </svg>
                             <span className="text-sm text-gray-600">In Stock</span>
                           </div>
                           
-                          <div className="mt-1">
+                          <div>
                             <button
-                              className="text-blue-600 hover:underline text-sm"
+                              className="text-blue-600 hover:underline text-sm font-medium"
                               onClick={() => {}}
                             >
                               Add to List
@@ -338,22 +346,22 @@ const CartPage = () => {
                         </div>
                       </div>
                       
-                      <div className="flex flex-col items-end min-w-[200px] pr-8">
-                        <div>
-                          <div className="text-sm text-gray-600 text-right mb-1">PRICE</div>
-                          <div className="font-bold text-xl text-gray-900 text-right">${(product.price || 206.19).toFixed(2)}</div>
-                          <div className="text-sm text-gray-600 text-right">${(product.price || 206.19).toFixed(2)} (EACH)</div>
+                      <div className="flex flex-row md:flex-col justify-between md:items-end gap-4 md:gap-2 flex-shrink-0 md:min-w-[180px]">
+                        <div className="text-right">
+                          <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Price</div>
+                          <div className="font-bold text-xl text-gray-900">${(product.price || 206.19).toFixed(2)}</div>
+                          <div className="text-sm text-gray-600">${(product.price || 206.19).toFixed(2)} (Each)</div>
                         </div>
                         
-                        <div className="mt-4">
-                          <div className="text-sm text-gray-600 mb-1 text-right">QTY</div>
+                        <div className="text-right md:text-right">
+                          <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Qty</div>
                           <div className="flex justify-end">
                             <input 
                               type="number" 
                               min="1" 
                               value={quantity} 
                               onChange={(e) => updateQuantity(product.id, parseInt(e.target.value) || 1)}
-                              className="border border-gray-300 rounded w-20 px-2 py-1 text-center"
+                              className="border border-gray-300 rounded w-16 px-2 py-1 text-center text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
                           </div>
                         </div>
@@ -362,11 +370,11 @@ const CartPage = () => {
                     
                     {/* Remove button (X) */}
                     <button
-                      className="absolute top-6 right-0 text-gray-400 hover:text-gray-600"
+                      className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 p-1"
                       onClick={() => removeFromCart(product.id)}
                       aria-label="Remove item"
                     >
-                      <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </button>
@@ -376,14 +384,14 @@ const CartPage = () => {
             )}
             
             {/* Frequently Bought Together - Compact Cart Integration */}
-            {cart.length > 0 && (
+            {/* {cart.length > 0 && (
               <CartFrequentlyBought
                 cartItems={cart}
                 visitorId={getCurrentVisitorId(selectedUserId)}
                 userId={selectedUserId || undefined}
                 limit={3}
               />
-            )}
+            )} */}
             
             <div className="flex justify-center mt-8">
               <button

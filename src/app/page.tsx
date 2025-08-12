@@ -23,7 +23,7 @@ interface RecommendationSection {
 
 interface RecommendationsData {
   trending?: RecommendationSection;
-  'on-sale'?: RecommendationSection;
+  'v5-onsale'?: RecommendationSection;
   'recommended-for-you'?: RecommendationSection;
 }
 
@@ -66,8 +66,8 @@ export default function Home() {
     try {
       const visitorId = getCurrentVisitorId(selectedUserId);
       const params = new URLSearchParams({
-        models: 'trending,on-sale,recommended-for-you', // Simplified to 3 working models
-        limit: '8',
+        models: 'trending,v5-onsale,recommended-for-you', // Using new v5-onsale model for enhanced special offers
+        limit: '16', // Increased to support both Popular Products (0-7) and You May Also Like (8-15) sections
         visitorId: visitorId,
       });
 
@@ -592,8 +592,8 @@ export default function Home() {
                 </div>
               )}
 
-              {/* On Sale Products */}
-              {recommendations?.['on-sale']?.products && (
+              {/* V5 On Sale Products */}
+              {recommendations?.['v5-onsale']?.products && (
                 <div className="mb-16">
                   <div className="flex items-center justify-between mb-8">
                     <div>
@@ -614,7 +614,7 @@ export default function Home() {
                     </button>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {recommendations['on-sale'].products.slice(0, 8).map((product) => (
+                    {recommendations['v5-onsale'].products.slice(0, 8).map((product) => (
                       <ProductCard
                         key={product.id}
                         product={product}
@@ -656,8 +656,8 @@ export default function Home() {
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                       {sectionToUse.products.slice(
-                        sectionToUse === trendingSection ? 4 : 0, 
-                        sectionToUse === trendingSection ? 12 : 8
+                        sectionToUse === trendingSection ? 8 : 0, 
+                        sectionToUse === trendingSection ? 16 : 8
                       ).map((product) => (
                         <ProductCard
                           key={product.id}

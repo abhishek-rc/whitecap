@@ -10,7 +10,6 @@ import PLPProductCard from '@/components/PLPProductCard';
 import FilterSidebar from '@/components/FilterSidebar';
 import SortDropdown from '@/components/SortDropdown';
 import Pagination from '@/components/Pagination';
-import RecommendationsWidget from '@/components/RecommendationsWidget';
 import Link from 'next/link';
 
 const DEMO_USERS = [
@@ -600,8 +599,8 @@ function SearchPageContent() {
               </>
             )}
 
-            {/* Recommendations Widget - Show when no search query or at the end */}
-            {!loading && (!searchQuery || searchResult?.products.length === 0) && (
+            {/* Recommendations Widget - Removed as requested */}
+            {/* {!loading && (!searchQuery || searchResult?.products.length === 0) && (
               <div className="mt-8">
                 <RecommendationsWidget
                   categories={filters.category}
@@ -611,7 +610,7 @@ function SearchPageContent() {
                   userId={selectedUserId || undefined}
                 />
               </div>
-            )}
+            )} */}
           </div>
         </div>
       </div>

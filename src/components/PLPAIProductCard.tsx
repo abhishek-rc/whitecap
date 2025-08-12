@@ -65,12 +65,38 @@ export default function PLPProductCard({ product, userId, visitorId, cardType = 
     };
   };
 
+  const handleProductClick = async () => {
+    // Send user event for product detail view
+    await sendUserEvent({
+      eventType: 'detail-page-view',
+      productDetails: [{ product }],
+      uri: `/product/${product.sku}`
+    });
+    
+    // Navigate to product detail page
+    router.push(`/product/${product.sku}`);
+  };
+
+  const handleAddToCart = async (e: React.MouseEvent) => {
+    // Prevent triggering the product click when clicking add to cart
+    e.stopPropagation();
+    
+    setAddLoading(true);
+    await sendUserEvent({
+      eventType: 'add-to-cart',
+      productDetails: [{ product, quantity: 1 }],
+      uri: window.location.href
+    });
+    addToCart(product, 1);
+    setAddLoading(false);
+  };
+
   return (
     <div className={`bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 ${cardType === 'tall' ? 'row-span-2' : ''}`}>
       {/* Product Image */}
       <div 
         className={`bg-gray-50 cursor-pointer overflow-hidden relative ${cardType === 'tall' ? 'aspect-[4/5]' : 'aspect-square'}`}
-        onClick={() => router.push(`/product/${product.id}`)}
+        onClick={handleProductClick}
       >
         {product.imageURL && !imageError ? (
           <img
@@ -111,7 +137,7 @@ export default function PLPProductCard({ product, userId, visitorId, cardType = 
         {/* Product Name */}
         <h3 
           className="text-sm font-semibold text-gray-900 mb-2 cursor-pointer hover:text-blue-600 leading-tight line-clamp-2"
-          onClick={() => router.push(`/product/${product.id}`)}
+          onClick={handleProductClick}
           style={{ minHeight: '2rem' }}
         >
           {truncateText(product.displayName || 'Product Name', 55)}
@@ -156,16 +182,7 @@ export default function PLPProductCard({ product, userId, visitorId, cardType = 
         <div className="space-y-2">
           <button 
             className="w-full px-4 py-2.5 bg-yellow-500 text-white rounded-xl hover:bg-yellow-600 transition-colors text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-            onClick={async () => {
-              setAddLoading(true);
-              await sendUserEvent({
-                eventType: 'add-to-cart',
-                productDetails: [{ product, quantity: 1 }],
-                uri: window.location.href
-              });
-              addToCart(product, 1);
-              setAddLoading(false);
-            }}
+            onClick={handleAddToCart}
             disabled={addLoading || !getStockInfo().hasStock}
           >
             {addLoading ? (
