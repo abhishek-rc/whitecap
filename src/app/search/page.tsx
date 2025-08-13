@@ -471,22 +471,6 @@ function SearchPageContent() {
         </div>
       </header>
 
-      {/* Navigation */}
-      <nav className="bg-gray-100 border-b border-gray-200">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <button className="px-4 py-3 flex items-center hover:bg-gray-200 transition-colors uppercase text-sm font-medium">
-                <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-                CATEGORIES
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
       {/* Main Content */}
       <div className="max-w-7xl mx-auto py-6">
         <div className="flex flex-col lg:flex-row gap-6">

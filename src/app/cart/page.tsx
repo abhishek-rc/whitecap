@@ -275,7 +275,7 @@ const CartPage = () => {
           </div>
         </div>
 
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between text-gray-800 items-center mb-4">
           <div className="text-lg">{cart.length} {cart.length === 1 ? 'Item' : 'Items'}</div>
           <button 
             className="text-blue-600 hover:text-blue-800 font-medium"
@@ -313,7 +313,11 @@ const CartPage = () => {
                               {product.brand || 'Werner'}
                             </div>
                             <h2 className="font-medium text-lg text-gray-900 leading-tight pr-8 md:pr-2 line-clamp-2">
-                              {product.displayName || 'Werner Pump Jack Only'}
+                              <Link href={`/product/${encodeURIComponent((product.sku || product.id) as string)}`} className="group cursor-pointer">
+                                <span className="text-gray-900 group-hover:text-blue-600 group-hover:underline">
+                                  {product.displayName || 'Werner Pump Jack Only'}
+                                </span>
+                              </Link>
                             </h2>
                           </div>
                           
@@ -346,7 +350,7 @@ const CartPage = () => {
                         </div>
                       </div>
                       
-                      <div className="flex flex-row md:flex-col justify-between md:items-end gap-4 md:gap-2 flex-shrink-0 md:min-w-[180px]">
+                      <div className="flex flex-row mt-4 md:flex-col justify-between md:items-end gap-4 md:gap-2 flex-shrink-0 md:min-w-[180px]">
                         <div className="text-right">
                           <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Price</div>
                           <div className="font-bold text-xl text-gray-900">${(product.price || 206.19).toFixed(2)}</div>
@@ -361,7 +365,7 @@ const CartPage = () => {
                               min="1" 
                               value={quantity} 
                               onChange={(e) => updateQuantity(product.id, parseInt(e.target.value) || 1)}
-                              className="border border-gray-300 rounded w-16 px-2 py-1 text-center text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              className="border border-gray-300 rounded w-16 px-2 py-1 text-center text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                             />
                           </div>
                         </div>
@@ -406,11 +410,11 @@ const CartPage = () => {
           {/* Right sidebar with branch info and order summary */}
           <div className="w-full lg:w-1/4 mt-8 lg:mt-0">
             <div className="bg-gray-50 p-4 rounded mb-6">
-              <div className="flex justify-between items-center mb-2">
+              <div className="flex justify-between text-gray-900 items-center mb-2">
                 <div className="font-medium">Selected Branch</div>
                 <button className="text-blue-600 hover:text-blue-800 text-sm">Change</button>
               </div>
-              <div className="text-sm">
+              <div className="text-sm text-gray-700">
                 <p className="font-medium">White Cap - Ecommerce 594</p>
                 <p>4500 5th Ave South</p>
                 <p>Building M4</p>
@@ -421,19 +425,19 @@ const CartPage = () => {
             
             {cart.length > 0 && (
               <div className="border-t border-gray-200 pt-4">
-                <div className="flex justify-between py-2">
+                <div className="flex justify-between py-2 text-gray-900">
                   <span>Subtotal</span>
                   <span className="font-medium">${subtotal.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between py-2">
+                <div className="flex justify-between py-2 text-gray-900">
                   <span>Estimated Shipping</span>
                   <span className="text-amber-700">TBD</span>
                 </div>
-                <div className="flex justify-between py-2">
+                <div className="flex justify-between py-2 text-gray-900">
                   <span>Estimated Tax</span>
                   <span className="text-amber-700">TBD</span>
                 </div>
-                <div className="flex justify-between py-2 font-bold border-t border-gray-200 mt-2 pt-2">
+                <div className="flex justify-between py-2 font-bold border-t border-gray-200 mt-2 pt-2 text-gray-900">
                   <span>Total</span>
                   <span>${subtotal.toFixed(2)}</span>
                 </div>

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useCart } from '@/components/CartContext';
 import { getOrCreateVisitorId } from '@/lib/visitorId';
+import CategoryDropdown from '@/components/CategoryDropdown';
 
 interface Suggestion {
   text: string;
@@ -41,6 +42,9 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
   const [mobileLoading, setMobileLoading] = useState(false);
   const mobileInputRef = useRef<HTMLInputElement>(null);
   const mobileSuggestionsRef = useRef<HTMLDivElement>(null);
+  
+  // Category dropdown state
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
 
   const handleSearchQuery = (query: string) => {
     const params = new URLSearchParams({ q: query });
@@ -465,28 +469,42 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
       </header>
 
       {/* Navigation Bar */}
-      <nav className="border-b border-gray-800">
+      <nav className="border-b border-gray-800 relative">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-stretch h-[50px]">
-            <button className="flex-1 px-4 py-3 flex items-center justify-center hover:bg-gray-300 transition-colors text-xs font-bold text-black bg-gray-300 border-r border-gray-300">
-              <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button 
+              className={`flex-1 px-4 py-3 flex items-center justify-center transition-all duration-200 text-xs font-bold text-black border-r border-gray-300 ${
+                showCategoryDropdown 
+                  ? 'bg-yellow-400 shadow-inner' 
+                  : 'bg-gray-300 hover:bg-gray-200 hover:shadow-sm'
+              }`}
+              onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+            >
+              <svg className={`h-4 w-4 mr-2 transition-transform duration-200 ${
+                showCategoryDropdown ? 'rotate-90' : ''
+              }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
               CATEGORIES
+              <svg className={`h-3 w-3 ml-2 transition-transform duration-200 ${
+                showCategoryDropdown ? 'rotate-180' : ''
+              }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
             </button>
-            <a href="#" className="flex-1 px-4 py-3 text-xs font-bold text-black hover:bg-gray-300 transition-colors flex items-center justify-center border-r border-gray-300">
+            <a href="#" className="flex-1 px-4 py-3 text-xs font-bold text-black hover:bg-gray-200 transition-colors flex items-center justify-center border-r border-gray-300">
               BRANDS
             </a>
-            <a href="#" className="flex-1 px-4 py-3 text-xs font-bold text-black hover:bg-gray-300 transition-colors flex items-center justify-center border-r border-gray-300">
+            <a href="#" className="flex-1 px-4 py-3 text-xs font-bold text-black hover:bg-gray-200 transition-colors flex items-center justify-center border-r border-gray-300">
               LOCATIONS
             </a>
-            <a href="#" className="flex-1 px-4 py-3 text-xs font-bold text-black hover:bg-gray-300 transition-colors flex items-center justify-center border-r border-gray-300">
+            <a href="#" className="flex-1 px-4 py-3 text-xs font-bold text-black hover:bg-gray-200 transition-colors flex items-center justify-center border-r border-gray-300">
               SERVICES
             </a>
-            <a href="#" className="flex-1 px-4 py-3 text-xs font-bold text-black hover:bg-gray-300 transition-colors flex items-center justify-center border-r border-gray-300">
+            <a href="#" className="flex-1 px-4 py-3 text-xs font-bold text-black hover:bg-gray-200 transition-colors flex items-center justify-center border-r border-gray-300">
               REQUEST A QUOTE
             </a>
-            <a href="#" className="flex-1 px-4 py-3 text-xs font-bold text-black hover:bg-gray-300 transition-colors flex items-center justify-center border-r border-gray-300">
+            <a href="#" className="flex-1 px-4 py-3 text-xs font-bold text-black hover:bg-gray-200 transition-colors flex items-center justify-center border-r border-gray-300">
               TOP DEALS
             </a>
             <div className="flex-1 px-4 py-3 flex items-center justify-center">
@@ -494,6 +512,12 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
             </div>
           </div>
         </div>
+        
+        {/* Category Dropdown */}
+        <CategoryDropdown 
+          isOpen={showCategoryDropdown} 
+          onClose={() => setShowCategoryDropdown(false)} 
+        />
       </nav>
 
       {/* Main Content */}
