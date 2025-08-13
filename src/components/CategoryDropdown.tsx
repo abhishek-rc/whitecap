@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import categoriesData from '@/data/categories.json';
 
 interface Category {
   name: string;
@@ -18,10 +17,28 @@ interface CategoryDropdownProps {
 export default function CategoryDropdown({ isOpen, onClose }: CategoryDropdownProps) {
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const [hoveredSubCategory, setHoveredSubCategory] = useState<string | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const categories = categoriesData as Category[];
+  // Fetch categories on component mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('/categories.json');
+        const data = await response.json();
+        setCategories(data);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+        setCategories([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -54,6 +71,17 @@ export default function CategoryDropdown({ isOpen, onClose }: CategoryDropdownPr
       style={{ boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' }}
     >
       <div className="flex min-h-[400px]">
+        {loading ? (
+          <div className="w-full flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-600"></div>
+            <span className="ml-3 text-gray-600">Loading categories...</span>
+          </div>
+        ) : categories.length === 0 ? (
+          <div className="w-full flex items-center justify-center py-8">
+            <span className="text-gray-600">No categories available</span>
+          </div>
+        ) : (
+        <>
         {/* Main Categories */}
         <div className="w-1/3 border-r border-gray-200 bg-gradient-to-b from-gray-50 to-gray-100">
           <div className="py-3">
@@ -149,6 +177,8 @@ export default function CategoryDropdown({ isOpen, onClose }: CategoryDropdownPr
                 ))}
             </div>
           </div>
+        )}
+        </>
         )}
       </div>
     </div>
