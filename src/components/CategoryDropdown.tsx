@@ -40,9 +40,8 @@ export default function CategoryDropdown({ isOpen, onClose }: CategoryDropdownPr
   }, [isOpen, onClose]);
 
   const handleCategoryClick = (category: Category) => {
-    // Use category ID for search if available, otherwise use name
-    const searchParam = category.id || category.name;
-    router.push(`/search?category=${encodeURIComponent(searchParam)}`);
+    // Use the category name for search (human-readable format)
+    router.push(`/search?category=${encodeURIComponent(category.name)}`);
     onClose();
   };
 

@@ -71,7 +71,7 @@ function SearchPageContent() {
       setDisplayedSearchQuery(query);
     }
     if (category) {
-      setFilters(prev => ({ ...prev, category: [category] }));
+      setFilters(prev => ({ ...prev, attributesCategory: [category] }));
     }
     
     // Mark initialization as complete
