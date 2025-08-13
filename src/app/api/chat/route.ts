@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazily create OpenAI client to avoid build-time env requirement
+function getOpenAIClient(): OpenAI | null {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) return null;
+    return new OpenAI({ apiKey });
+}
 
 // In-memory session store for conversation history
 const sessionStore: Record<string, { messages: Array<{ role: string; content: string }> }> = {};
@@ -20,7 +22,9 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        if (!process.env.OPENAI_API_KEY) {
+        // Check key and lazily instantiate client (prevents build-time failure)
+        const openai = getOpenAIClient();
+        if (!openai) {
             return NextResponse.json(
                 { success: false, error: 'OpenAI API key not configured' },
                 { status: 500 }
@@ -102,7 +106,7 @@ export async function POST(request: NextRequest) {
         // Add user message to conversation history
         conversationHistory.push({ role: 'user', content: message });
 
-        // Create a properly typed messages array
+        // Build messages array for Chat Completions
         const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
             {
                 role: 'system',
