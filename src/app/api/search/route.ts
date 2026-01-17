@@ -1,11 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { vertexAICommerceService } from '@/lib/vertex-ai-commerce';
 import { cache } from '@/lib/cache';
+import { extractUnitsForFiltering } from '@/lib/unit-detector';
 
 export async function GET(request: NextRequest) {
   // Extract parameters outside try block for error handling
   const { searchParams } = new URL(request.url);
-  const query = searchParams.get('q') || '';
+  const originalQuery = searchParams.get('q') || '';
+  
+  // 📏 AUTO-DETECT UNITS FROM QUERY
+  const unitDetectionResult = extractUnitsForFiltering(originalQuery);
+  
+  // 🎯 ENHANCE QUERY WITH DETECTED UNITS
+  let query = originalQuery;
+  if (unitDetectionResult.detectedUnits.length > 0) {
+    // Boost the detected unit in the search query for better relevance
+    const detectedUnit = unitDetectionResult.detectedUnits[0]; // Use the most specific unit
+    query = `${originalQuery} ${detectedUnit}`; // Add unit to query for better matching
+    console.log('🚀 Enhanced query with unit:', query);
+  }
+  
+  console.log('🔍 Unit Detection Result:', {
+    originalQuery,
+    detectedUnits: unitDetectionResult.detectedUnits,
+    queryWithoutUnits: unitDetectionResult.queryWithoutUnits
+  });
+  
+  // 🐛 DEBUG: Log unit detection details
+  if (unitDetectionResult.detectedUnits.length > 0) {
+    console.log('✅ UNITS DETECTED! Will apply title filter for:', unitDetectionResult.detectedUnits);
+  } else {
+    console.log('❌ NO UNITS DETECTED in query:', originalQuery);
+  }
   const page = parseInt(searchParams.get('page') || '1');
   const offset = parseInt(searchParams.get('offset') || '0');
   const limit = parseInt(searchParams.get('limit') || '20');
@@ -36,13 +62,19 @@ export async function GET(request: NextRequest) {
   const assembledWidths = searchParams.getAll('assembledWidth');
   const assembledDepths = searchParams.getAll('assembledDepth');
   const vendorNames = searchParams.getAll('vendorName');
-  const units = searchParams.getAll('units');
+  const explicitUnits = searchParams.getAll('units');
+  
+  // 📏 COMBINE EXPLICIT UNITS WITH AUTO-DETECTED UNITS
+  const allUnits = [...new Set([...explicitUnits, ...unitDetectionResult.detectedUnits])];
+  const units = allUnits;
+  
+  // 🐛 DEBUG: Log final units array
+  console.log('🔧 Final units array that will be used for filtering:', units);
 
   const priceMin = searchParams.get('priceMin') ? parseFloat(searchParams.get('priceMin')!) : undefined;
   const priceMax = searchParams.get('priceMax') ? parseFloat(searchParams.get('priceMax')!) : undefined;
   const sortBy = searchParams.get('sortBy') || '';
   const visitorId = searchParams.get('visitorId') || 'anonymous-user';
-  const userId = searchParams.get('userId');
   const exact = searchParams.get('exact') === 'true';
   try {
 
@@ -204,7 +236,7 @@ export async function GET(request: NextRequest) {
       const searchPromise = vertexAICommerceService.search({
         query: exact ? `"${query}"` : (query || ''), // Use exact match with quotes if exact=true
         visitorId,
-        ...(userId ? { userInfo: { userId } } : {}),
+        // ...(userId ? { userInfo: { userId } } : {}),
         pageSize: limit,
         offset: offset,
         filter,

@@ -964,8 +964,11 @@ class VertexAICommerceService {
           const valueStr = Array.isArray(value) ? value.map(v => `"${v}"`).join(',') : `"${value}"`;
           filterParts.push(`vendorName: ANY(${valueStr})`);
         } else if (key === 'units' && value) {
-          const valueStr = Array.isArray(value) ? value.map(v => `"${v}"`).join(',') : `"${value}"`;
-          filterParts.push(`units: ANY(${valueStr})`);
+          // TEMPORARILY DISABLED: Filter by title containing the unit terms
+          console.log('🎯 Units filter detected but DISABLED for testing:', value);
+          console.log('🚧 Relying on enhanced query approach instead of title filter');
+          // The enhanced query approach in the search route should handle unit matching
+          // by boosting the unit term in the search query itself
         } else if (key === 'priceRange' && value && typeof value === 'object' && value.min !== undefined && value.max !== undefined) {
           // Handle price range filtering using Vertex AI IN syntax
           // Format: price: IN(lower_bound, upper_bound)
